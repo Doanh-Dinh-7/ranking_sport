@@ -129,6 +129,44 @@ All styling uses Tailwind CSS v4 with shadcn/ui components. Dark theme is built-
 
 Modify color tokens in `app/globals.css` under the `@theme` section.
 
+## Kiểm tra trước khi push
+
+Trước khi đẩy code lên remote (hoặc mở PR), nên chạy lần lượt:
+
+1. **Lint** — không còn lỗi ESLint:
+   ```bash
+   pnpm lint
+   ```
+   (hoặc `npm run lint` nếu dùng npm)
+
+2. **Build production** — đảm bảo Next.js biên dịch được như môi trường thật:
+   ```bash
+   pnpm build
+   ```
+   Xem mục [Build production](#build-production) bên dưới.
+
+3. **Biến môi trường** — không commit file `.env.local` / secrets; trên CI hoặc Vercel cấu hình tương đương (`NEXT_PUBLIC_SUPABASE_*`, `ADMIN_*`).
+
+4. **Rà soát nhanh** — mở các trang chính (trang chủ, bảng xếp hạng, lịch, chi tiết trận) nếu vừa đổi UI hoặc API.
+
+## Build production
+
+Build tối ưu cho môi trường production (kiểm tra lỗi kiểu, bundle, v.v.):
+
+```bash
+pnpm install
+pnpm build
+```
+
+- Kết quả thành công: thư mục `.next` được tạo, không có lỗi trong log.
+- Sau build, chạy server production cục bộ để kiểm tra:
+  ```bash
+  pnpm start
+  ```
+  Mặc định: `http://localhost:3000` (giống hành vi trên Vercel sau deploy).
+
+**Lưu ý:** `pnpm dev` là chế độ phát triển; luôn xác nhận bằng `pnpm build` trước khi merge/push các thay đổi lớn.
+
 ## Deployment
 
 ### Deploy to Vercel

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
+import { SiteFooter } from '@/components/site-footer'
 import { TOURNAMENT_LOGO_URL, TOURNAMENT_NAME } from '@/lib/tournament'
 import './globals.css'
 
@@ -32,7 +33,10 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
+          <div className="flex min-h-screen flex-col">
+            <div className="flex-1">{children}</div>
+            <SiteFooter />
+          </div>
           <Analytics />
         </ThemeProvider>
       </body>
