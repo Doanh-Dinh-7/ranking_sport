@@ -21,6 +21,7 @@ export default function Home() {
     totalMatches: 0,
     finishedMatches: 0,
     remainingMatches: 0,
+    totalGoals: 0,
   });
   const [matches, setMatches] = useState<any[]>([]);
   const [standings, setStandings] = useState<Standing[]>([]);
@@ -54,6 +55,12 @@ export default function Home() {
         ).length;
         const total = matchesData.length;
 
+        const totalGoals = (matchesData as Match[]).reduce((sum, m) => {
+          if (m.status !== "finished") return sum;
+          if (m.home_score == null || m.away_score == null) return sum;
+          return sum + m.home_score + m.away_score;
+        }, 0);
+
         const playableTeams = teamsData.filter(
           (t: Team) => t.group_name !== "K",
         );
@@ -62,6 +69,7 @@ export default function Home() {
           totalMatches: total,
           finishedMatches: finished,
           remainingMatches: total - finished,
+          totalGoals,
         });
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
@@ -135,7 +143,7 @@ export default function Home() {
                 </h1>
                 <p className="text-white/90 text-sm sm:text-base">
                   {stats.totalTeams} đội tham dự · {stats.totalMatches} trận đấu
-                  · Vòng bảng đang diễn ra
+                  · {stats.totalGoals} bàn thắng · Vòng bảng đang diễn ra
                 </p>
               </div>
             </div>
@@ -163,7 +171,7 @@ export default function Home() {
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground mb-1">Bàn thắng</p>
                 <p className="text-3xl font-bold text-foreground">
-                  {Math.floor(Math.random() * 50) + 30}
+                  {stats.totalGoals}
                 </p>
               </CardContent>
             </Card>
