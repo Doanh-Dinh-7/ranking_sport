@@ -126,7 +126,7 @@ export default function Home() {
               priority
               sizes="(max-width: 1280px) 100vw, 1280px"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/25" />
+            <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/45 to-black/25" />
             <div className="relative flex flex-col sm:flex-row items-start gap-4 p-6 sm:p-8">
               <div className="relative h-16 w-16 sm:h-20 sm:w-20 shrink-0 overflow-hidden rounded-lg ring-2 ring-white/30 shadow-lg">
                 <Image

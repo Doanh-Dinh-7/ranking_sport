@@ -98,18 +98,20 @@ export function Navbar() {
             <NavLinks pathname={pathname} />
           </div>
 
-          {/* <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <div className="hidden shrink-0 items-center gap-2 md:flex">
             <ModeToggle />
+            {/* 
             {!isAdmin && (
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin">Admin</Link>
               </Button>
             )}
-          </div> */}
+            */}
+          </div>
 
           {/* Mobile: sheet menu */}
           <div className="flex shrink-0 items-center gap-1.5 md:hidden">
-            {/* <ModeToggle /> */}
+            <ModeToggle />
             <Sheet>
               <SheetTrigger asChild>
                 <Button

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Navbar } from '@/components/navbar';
-import { KnockoutBracket } from '@/components/knockout/knockout-bracket';
-import type { MatchWithTeams } from '@/lib/bracket-utils';
+import { useEffect, useState } from "react";
+import { Navbar } from "@/components/navbar";
+import { KnockoutBracket } from "@/components/knockout/knockout-bracket";
+import type { MatchWithTeams } from "@/lib/bracket-utils";
 
 export default function KnockoutPage() {
   const [matches, setMatches] = useState<MatchWithTeams[]>([]);
@@ -13,7 +13,7 @@ export default function KnockoutPage() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch('/api/matches');
+        const res = await fetch("/api/matches");
         const data = await res.json();
         if (!cancelled) setMatches(Array.isArray(data) ? data : []);
       } catch (e) {
@@ -35,19 +35,22 @@ export default function KnockoutPage() {
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Vòng loại trực tiếp</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+                Vòng loại trực tiếp
+              </h1>
               <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                Click vào trận đấu bất kỳ để xem chi tiết kết quả và timeline sự kiện · Top 2 mỗi bảng đi tiếp
+                Click vào trận đấu bất kỳ để xem chi tiết kết quả và timeline sự
+                kiện · Top 2 mỗi bảng đi tiếp
               </p>
             </div>
           </div>
 
           {loading ? (
-            <p className="text-muted-foreground text-center py-16">Loading...</p>
+            <p className="text-muted-foreground text-center py-16">
+              Loading...
+            </p>
           ) : (
-            <div className="overflow-x-auto pb-4">
-              <KnockoutBracket matches={matches} />
-            </div>
+            <KnockoutBracket matches={matches} />
           )}
         </div>
       </main>
