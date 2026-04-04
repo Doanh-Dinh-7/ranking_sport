@@ -28,6 +28,7 @@ export function TeamLogo({
           alt=""
           width={112}
           height={112}
+          loading="eager"
           className="w-full h-full object-cover"
         />
       ) : (

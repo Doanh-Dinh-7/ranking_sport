@@ -24,6 +24,7 @@ function CompactTeam({ team }: { team: Team }) {
             alt={team.name}
             width={32}
             height={32}
+            loading="eager"
             className="object-cover w-full h-full"
           />
         </div>

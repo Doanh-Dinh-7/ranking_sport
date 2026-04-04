@@ -1,44 +1,50 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ModeToggle } from '@/components/mode-toggle';
-import Image from 'next/image';
-import { TOURNAMENT_LOGO_URL, TOURNAMENT_NAME } from '@/lib/tournament';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ModeToggle } from "@/components/mode-toggle";
+import Image from "next/image";
+import { TOURNAMENT_LOGO_URL, TOURNAMENT_NAME } from "@/lib/tournament";
 
 export default function AdminLoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/admin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || 'Login failed');
+        setError(data.error || "Login failed");
         return;
       }
 
       // Redirect to admin dashboard
-      router.push('/admin');
+      router.push("/admin");
     } catch (err) {
-      console.error('Login error:', err);
-      setError('An error occurred. Please try again.');
+      console.error("Login error:", err);
+      setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -59,11 +65,16 @@ export default function AdminLoginPage() {
                 width={48}
                 height={48}
                 className="h-full w-full object-cover"
+                loading="eager"
               />
             </div>
             <div className="min-w-0">
-              <span className="text-foreground font-bold text-lg block leading-tight">Admin</span>
-              <span className="text-xs text-muted-foreground">{TOURNAMENT_NAME}</span>
+              <span className="text-foreground font-bold text-lg block leading-tight">
+                Admin
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {TOURNAMENT_NAME}
+              </span>
             </div>
           </div>
           <CardTitle>Đăng nhập</CardTitle>
@@ -73,7 +84,9 @@ export default function AdminLoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Tên đăng nhập</label>
+              <label className="text-sm font-medium text-foreground">
+                Tên đăng nhập
+              </label>
               <Input
                 type="text"
                 placeholder="username"
@@ -84,7 +97,9 @@ export default function AdminLoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Mật khẩu</label>
+              <label className="text-sm font-medium text-foreground">
+                Mật khẩu
+              </label>
               <Input
                 type="password"
                 placeholder="password"
@@ -96,8 +111,12 @@ export default function AdminLoginPage() {
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" disabled={loading || !username || !password} className="w-full">
-              {loading ? 'Đang xử lý...' : 'Đăng nhập'}
+            <Button
+              type="submit"
+              disabled={loading || !username || !password}
+              className="w-full"
+            >
+              {loading ? "Đang xử lý..." : "Đăng nhập"}
             </Button>
           </form>
 
@@ -105,9 +124,13 @@ export default function AdminLoginPage() {
             <p className="text-xs text-muted-foreground text-center">
               Demo credentials (for testing):
               <br />
-              Username: <code className="bg-muted px-1 py-0.5 rounded">admin</code>
+              Username:{" "}
+              <code className="bg-muted px-1 py-0.5 rounded">admin</code>
               <br />
-              Password: <code className="bg-muted px-1 py-0.5 rounded">tournament2026</code>
+              Password:{" "}
+              <code className="bg-muted px-1 py-0.5 rounded">
+                tournament2026
+              </code>
             </p>
           </div>
         </CardContent>

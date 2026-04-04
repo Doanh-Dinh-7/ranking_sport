@@ -93,10 +93,6 @@ export default function Home() {
       matches.filter((m) => isMatchInProgress(m.scheduled_at, m.status, clock)),
     [matches, clock],
   );
-  const liveMatchIds = useMemo(
-    () => new Set(liveMatches.map((m) => m.id)),
-    [liveMatches],
-  );
 
   if (loading) {
     return (
@@ -140,6 +136,7 @@ export default function Home() {
               alt=""
               fill
               className="object-cover"
+              loading="eager"
               priority
               sizes="(max-width: 1280px) 100vw, 1280px"
             />
@@ -204,7 +201,40 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* Trận đang diễn ra (theo lịch + cửa sổ thời gian, đồng bộ match-live) */}
+          <div className="mb-8 grid gap-8 md:grid-cols-2">
+            {latestMatch && (
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg">Kết quả gần nhất</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MatchCard
+                    match={latestMatch}
+                    homeTeam={teams[latestMatch.home_team_id]}
+                    awayTeam={teams[latestMatch.away_team_id]}
+                    variant="full"
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {nextMatch && (
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle className="text-lg">Trận sắp tới</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MatchCard
+                    match={nextMatch}
+                    homeTeam={teams[nextMatch.home_team_id]}
+                    awayTeam={teams[nextMatch.away_team_id]}
+                    variant="full"
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
           {liveMatches.length > 0 && (
             <Card className="mb-8 border-blue-500/35 bg-blue-500/4 dark:bg-blue-500/10">
               <CardHeader className="pb-2">
@@ -236,41 +266,6 @@ export default function Home() {
               </CardContent>
             </Card>
           )}
-
-          {/* Latest and Next Match */}
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
-            {latestMatch && (
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Kết quả gần nhất</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MatchCard
-                    match={latestMatch}
-                    homeTeam={teams[latestMatch.home_team_id]}
-                    awayTeam={teams[latestMatch.away_team_id]}
-                    variant="full"
-                  />
-                </CardContent>
-              </Card>
-            )}
-
-            {nextMatch && !liveMatchIds.has(nextMatch.id) && (
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Trận sắp tới</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MatchCard
-                    match={nextMatch}
-                    homeTeam={teams[nextMatch.home_team_id]}
-                    awayTeam={teams[nextMatch.away_team_id]}
-                    variant="full"
-                  />
-                </CardContent>
-              </Card>
-            )}
-          </div>
 
           {/* Standings */}
           <Tabs defaultValue="groupA" className="mb-8">

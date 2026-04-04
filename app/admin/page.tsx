@@ -1,17 +1,18 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Team, Standing } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useEffect, useMemo, useState } from "react";
+import { Team, Standing } from "@/lib/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
 export default function AdminDashboard() {
   const [matches, setMatches] = useState<any[]>([]);
@@ -19,31 +20,33 @@ export default function AdminDashboard() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Form state
-  const [selectedMatch, setSelectedMatch] = useState<string>('');
-  const [homeScore, setHomeScore] = useState<string>('');
-  const [awayScore, setAwayScore] = useState<string>('');
+  const [selectedMatch, setSelectedMatch] = useState<string>("");
+  const [homeScore, setHomeScore] = useState<string>("");
+  const [awayScore, setAwayScore] = useState<string>("");
+  const [matchStatus, setMatchStatus] = useState<"scheduled" | "finished">(
+    "scheduled",
+  );
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     async function loadData() {
       try {
         const [matchesRes, teamsRes, standingsRes] = await Promise.all([
-          fetch('/api/matches'),
-          fetch('/api/teams'),
-          fetch('/api/standings'),
+          fetch("/api/matches"),
+          fetch("/api/teams"),
+          fetch("/api/standings"),
         ]);
 
         const matchesData = await matchesRes.json();
         const teamsData = await teamsRes.json();
         const standingsData = await standingsRes.json();
 
-        setMatches(matchesData);
-        setTeams(teamsData);
-        setStandings(standingsData);
+        setMatches(Array.isArray(matchesData) ? matchesData : []);
+        setTeams(Array.isArray(teamsData) ? teamsData : []);
+        setStandings(Array.isArray(standingsData) ? standingsData : []);
       } catch (error) {
-        console.error('Failed to load data:', error);
+        console.error("Failed to load data:", error);
       } finally {
         setLoading(false);
       }
@@ -52,45 +55,84 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  async function handleSaveResult(e: React.FormEvent) {
+  const sortedMatches = useMemo(
+    () =>
+      [...matches].sort(
+        (a, b) =>
+          new Date(a.scheduled_at).getTime() -
+          new Date(b.scheduled_at).getTime(),
+      ),
+    [matches],
+  );
+
+  useEffect(() => {
+    if (!selectedMatch) return;
+    const m = matches.find((x) => x.id === selectedMatch);
+    if (!m) return;
+    setHomeScore(m.home_score != null ? String(m.home_score) : "");
+    setAwayScore(m.away_score != null ? String(m.away_score) : "");
+    setMatchStatus(m.status === "finished" ? "finished" : "scheduled");
+  }, [selectedMatch, matches]);
+
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedMatch || homeScore === '' || awayScore === '') {
-      setMessage('Vui lòng điền tất cả các trường');
+    if (!selectedMatch) {
+      setMessage("Chọn trận đấu");
       return;
     }
 
+    if (matchStatus === "finished") {
+      if (homeScore === "" || awayScore === "") {
+        setMessage("Kết thúc cần nhập tỉ số hai đội");
+        return;
+      }
+      const hs = parseInt(homeScore, 10);
+      const as = parseInt(awayScore, 10);
+      if (Number.isNaN(hs) || Number.isNaN(as) || hs < 0 || as < 0) {
+        setMessage("Tỉ số phải là số nguyên ≥ 0");
+        return;
+      }
+    }
+
     setSaving(true);
-    setMessage('');
+    setMessage("");
 
     try {
-      const res = await fetch('/api/admin/match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          match_id: selectedMatch,
-          home_score: parseInt(homeScore),
-          away_score: parseInt(awayScore),
-          events: [],
-        }),
-        credentials: 'include',
+      const body: Record<string, unknown> = {
+        match_id: selectedMatch,
+        status: matchStatus,
+      };
+      if (matchStatus === "finished") {
+        body.home_score = parseInt(homeScore, 10);
+        body.away_score = parseInt(awayScore, 10);
+      } else {
+        body.home_score = null;
+        body.away_score = null;
+      }
+
+      const res = await fetch("/api/admin/match", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        credentials: "include",
       });
 
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const data = await res.json();
-        setMessage('Lỗi: ' + (data.error || 'Lưu không thành công'));
+        setMessage("Lỗi: " + (data.error || "Lưu không thành công"));
         return;
       }
 
-      await res.json();
-      setMessage('✓ Lưu kết quả thành công! Bảng xếp hạng đã cập nhật.');
-
-      // Refresh data
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+      setMessage("✓ Đã cập nhật tỉ số và trạng thái.");
+      const matchesRes = await fetch("/api/matches");
+      const matchesData = await matchesRes.json();
+      setMatches(Array.isArray(matchesData) ? matchesData : []);
+      const standingsRes = await fetch("/api/standings");
+      const standingsData = await standingsRes.json();
+      setStandings(Array.isArray(standingsData) ? standingsData : []);
     } catch (error) {
-      console.error('Save error:', error);
-      setMessage('Lỗi: Không thể lưu kết quả');
+      console.error("Save error:", error);
+      setMessage("Lỗi: Không thể lưu");
     } finally {
       setSaving(false);
     }
@@ -98,96 +140,153 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
+      <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
 
   const stats = {
-    finished: matches.filter((m) => m.status === 'finished').length,
-    scheduled: matches.filter((m) => m.status === 'scheduled').length,
+    finished: matches.filter((m) => m.status === "finished").length,
+    scheduled: matches.filter((m) => m.status === "scheduled").length,
     total: matches.length,
   };
 
-  const unfinishedMatches = matches.filter((m) => m.status === 'scheduled');
-  const getTeamName = (id: string) => teams.find((t) => t.id === id)?.short_name || 'N/A';
+  const getTeamName = (id: string) =>
+    teams.find((t) => t.id === id)?.short_name || "N/A";
+
+  const stageLabel = (stage: string) => {
+    if (stage === "group") return "Bảng";
+    if (stage === "qf") return "TK";
+    if (stage === "sf") return "BK";
+    if (stage === "final") return "CK";
+    if (stage === "third_place") return "H3";
+    return stage;
+  };
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-foreground mb-2">Kết Quả Trận Đấu</h1>
-        <p className="text-muted-foreground">Nhập kết quả để cập nhật bảng xếp hạng</p>
+        <h1 className="mb-2 text-4xl font-bold text-foreground">
+          Tỉ số & trạng thái
+        </h1>
+        <p className="text-muted-foreground">
+          Chọn trận, chỉnh tỉ số, đặt <strong>Chờ đá</strong> hoặc{" "}
+          <strong>Kết thúc</strong> (trigger cập nhật BXH khi kết thúc).
+        </p>
+        <p className="mt-2 text-xs text-amber-700/90 dark:text-amber-400/90">
+          Lưu ý: chuyển từ &quot;Kết thúc&quot; về &quot;Chờ đá&quot; có thể
+          khiến BXH chưa khớp — cần kiểm tra lại dữ liệu nếu dùng tính năng này.
+        </p>
       </div>
 
-      {/* Statistics */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="border-border">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground mb-1">Chờ kết quả</p>
-            <p className="text-3xl font-bold text-foreground">{stats.scheduled}</p>
+            <p className="mb-1 text-sm text-muted-foreground">Chờ đá</p>
+            <p className="text-3xl font-bold text-foreground">
+              {stats.scheduled}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground mb-1">Đã hoàn thành</p>
-            <p className="text-3xl font-bold text-foreground">{stats.finished}</p>
+            <p className="mb-1 text-sm text-muted-foreground">Đã kết thúc</p>
+            <p className="text-3xl font-bold text-foreground">
+              {stats.finished}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground mb-1">Còn lại</p>
-            <p className="text-3xl font-bold text-foreground">{stats.total - stats.finished}</p>
+            <p className="mb-1 text-sm text-muted-foreground">Tổng trận</p>
+            <p className="text-3xl font-bold text-foreground">{stats.total}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Form and Matches */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        {/* Form */}
+      <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Nhập Kết Quả</CardTitle>
+              <CardTitle>Cập nhật trận</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSaveResult} className="space-y-4">
-                {/* Match selector */}
+              <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Chọn Trận Đấu</label>
-                  <Select value={selectedMatch} onValueChange={setSelectedMatch}>
+                  <Label>Trận đấu</Label>
+                  <Select
+                    value={selectedMatch}
+                    onValueChange={setSelectedMatch}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Chọn trận đấu..." />
+                      <SelectValue placeholder="Chọn trận..." />
                     </SelectTrigger>
-                    <SelectContent>
-                      {unfinishedMatches.map((match) => (
+                    <SelectContent className="max-h-72">
+                      {sortedMatches.map((match) => (
                         <SelectItem key={match.id} value={match.id}>
-                          {getTeamName(match.home_team_id)} vs {getTeamName(match.away_team_id)} ·{' '}
-                          {new Date(match.scheduled_at).toLocaleDateString('vi-VN')}
+                          <span className="font-medium">
+                            {getTeamName(match.home_team_id)} vs{" "}
+                            {getTeamName(match.away_team_id)}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {stageLabel(match.stage)} ·{" "}
+                            {new Date(match.scheduled_at).toLocaleString(
+                              "vi-VN",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                            {match.status === "finished"
+                              ? ` · ${match.home_score}-${match.away_score}`
+                              : ""}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Score inputs */}
+                <div className="space-y-2">
+                  <Label>Trạng thái</Label>
+                  <Select
+                    value={matchStatus}
+                    onValueChange={(v) =>
+                      setMatchStatus(v as "scheduled" | "finished")
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="scheduled">Chờ đá (scheduled)</SelectItem>
+                      <SelectItem value="finished">Kết thúc (finished)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">Bàn thắng Nhà</label>
+                    <Label>Bàn nhà</Label>
                     <Input
                       type="number"
-                      min="0"
+                      min={0}
+                      disabled={matchStatus === "scheduled"}
                       value={homeScore}
                       onChange={(e) => setHomeScore(e.target.value)}
                       placeholder="0"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">Bàn thắng Khách</label>
+                    <Label>Bàn khách</Label>
                     <Input
                       type="number"
-                      min="0"
+                      min={0}
+                      disabled={matchStatus === "scheduled"}
                       value={awayScore}
                       onChange={(e) => setAwayScore(e.target.value)}
                       placeholder="0"
@@ -195,63 +294,82 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* Message */}
                 {message && (
                   <div
-                    className={`p-3 rounded-md text-sm border ${
-                      message.includes('✓')
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                        : 'bg-destructive/15 text-destructive border-destructive/30'
+                    className={`rounded-md border p-3 text-sm ${
+                      message.includes("✓")
+                        ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200"
+                        : "border-destructive/30 bg-destructive/15 text-destructive"
                     }`}
                   >
                     {message}
                   </div>
                 )}
 
-                {/* Submit button */}
-                <Button type="submit" disabled={saving || !selectedMatch} className="w-full">
-                  {saving ? 'Đang lưu...' : 'Lưu Kết Quả'}
+                <Button
+                  type="submit"
+                  disabled={saving || !selectedMatch}
+                  className="w-full"
+                >
+                  {saving ? "Đang lưu..." : "Lưu cập nhật"}
                 </Button>
               </form>
 
-              <div className="mt-6 pt-6 border-t border-border">
+              <div className="mt-6 border-t border-border pt-6">
                 <p className="text-xs text-muted-foreground">
-                  💡 <strong>Lưu ý:</strong> Khi lưu kết quả, PostgreSQL trigger tự động sẽ cập nhật
-                  bảng xếp hạng. Không cần nhập dữ liệu manually.
+                  Khi trạng thái là <strong>Kết thúc</strong>, PostgreSQL trigger
+                  cập nhật bảng xếp hạng theo tỉ số.
                 </p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Upcoming matches list */}
         <div>
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Danh Sách Trận Chờ</CardTitle>
+              <CardTitle>Danh sách trận</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {unfinishedMatches.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Không có trận chờ</p>
+              <div className="max-h-112 space-y-2 overflow-y-auto">
+                {sortedMatches.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Không có trận</p>
                 ) : (
-                  unfinishedMatches.map((match) => (
-                    <div
+                  sortedMatches.map((match) => (
+                    <button
                       key={match.id}
-                      className={`p-3 rounded-md text-sm border cursor-pointer transition-colors ${
-                        selectedMatch === match.id
-                          ? 'bg-primary border-primary text-primary-foreground'
-                          : 'bg-muted/50 border-border text-foreground hover:bg-muted'
-                      }`}
+                      type="button"
                       onClick={() => setSelectedMatch(match.id)}
+                      className={`w-full rounded-md border p-3 text-left text-sm transition-colors ${
+                        selectedMatch === match.id
+                          ? "border-primary bg-primary/15"
+                          : "border-border bg-muted/40 hover:bg-muted"
+                      }`}
                     >
-                      <p className="font-semibold">
-                        {getTeamName(match.home_team_id)} vs {getTeamName(match.away_team_id)}
+                      <p className="font-semibold text-foreground">
+                        {getTeamName(match.home_team_id)} vs{" "}
+                        {getTeamName(match.away_team_id)}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(match.scheduled_at).toLocaleDateString('vi-VN')}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {stageLabel(match.stage)} ·{" "}
+                        {new Date(match.scheduled_at).toLocaleDateString(
+                          "vi-VN",
+                        )}
                       </p>
-                    </div>
+                      <p className="mt-1 text-xs">
+                        <span
+                          className={
+                            match.status === "finished"
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-blue-600 dark:text-blue-400"
+                          }
+                        >
+                          {match.status === "finished"
+                            ? `Kết thúc ${match.home_score ?? "—"}-${match.away_score ?? "—"}`
+                            : "Chờ đá"}
+                        </span>
+                      </p>
+                    </button>
                   ))
                 )}
               </div>
@@ -260,25 +378,26 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Current standings preview */}
       <Card className="border-border">
         <CardHeader>
-          <CardTitle>Bảng Xếp Hạng Hiện Tại</CardTitle>
+          <CardTitle>Bảng xếp hạng (xem nhanh)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {['A', 'B', 'C', 'D'].map((group) => (
+            {["A", "B", "C", "D"].map((group) => (
               <div key={group}>
-                <h3 className="font-semibold text-foreground mb-3">Bảng {group}</h3>
+                <h3 className="mb-3 font-semibold text-foreground">
+                  Bảng {group}
+                </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground">
-                        <th className="text-left px-2 py-2">#</th>
-                        <th className="text-left px-2 py-2">Đội</th>
-                        <th className="text-center px-2 py-2">T</th>
-                        <th className="text-center px-2 py-2">Th-H-Th</th>
-                        <th className="text-center px-2 py-2">Pts</th>
+                        <th className="px-2 py-2 text-left">#</th>
+                        <th className="px-2 py-2 text-left">Đội</th>
+                        <th className="px-2 py-2 text-center">T</th>
+                        <th className="px-2 py-2 text-center">Th-H-Th</th>
+                        <th className="px-2 py-2 text-center">Pts</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -287,15 +406,19 @@ export default function AdminDashboard() {
                         .slice(0, 4)
                         .map((standing, i) => (
                           <tr key={standing.id} className="border-b border-border">
-                            <td className="px-2 py-2 text-muted-foreground">{i + 1}</td>
-                            <td className="px-2 py-2 text-foreground">{getTeamName(standing.team_id)}</td>
-                            <td className="text-center px-2 py-2 text-foreground">
+                            <td className="px-2 py-2 text-muted-foreground">
+                              {i + 1}
+                            </td>
+                            <td className="px-2 py-2 text-foreground">
+                              {getTeamName(standing.team_id)}
+                            </td>
+                            <td className="px-2 py-2 text-center text-foreground">
                               {standing.played}
                             </td>
-                            <td className="text-center px-2 py-2 text-foreground">
+                            <td className="px-2 py-2 text-center text-foreground">
                               {standing.won}-{standing.drawn}-{standing.lost}
                             </td>
-                            <td className="text-center px-2 py-2 font-semibold text-primary">
+                            <td className="px-2 py-2 text-center font-semibold text-primary">
                               {standing.points}
                             </td>
                           </tr>

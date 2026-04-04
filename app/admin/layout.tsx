@@ -91,11 +91,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <ModeToggle />
           </div>
-          <p className="text-xs text-muted-foreground">Cập nhật kết quả trận</p>
+          <p className="text-xs text-muted-foreground">Quản lý giải</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-          <NavLink href="/admin" label="Kết quả trận đấu" icon="K" active={pathname === '/admin'} />
+          <NavLink
+            href="/admin"
+            label="Tỉ số & trạng thái"
+            icon="T"
+            active={pathname === '/admin'}
+          />
+          <NavLink
+            href="/admin/events"
+            label="Diễn biến trận"
+            icon="D"
+            active={pathname === '/admin/events'}
+          />
         </nav>
 
         {/* Logout */}

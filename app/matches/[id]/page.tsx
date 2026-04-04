@@ -1,24 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Navbar } from '@/components/navbar';
-import { TeamLogo } from '@/components/team-badge';
-import { Team, MatchEvent } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { formatStageLabel } from '@/lib/bracket-utils';
-import { useIsMatchLive, LiveStatusLabel } from '@/components/match-live';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Navbar } from "@/components/navbar";
+import { TeamLogo } from "@/components/team-badge";
+import { Team, MatchEvent } from "@/lib/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+import { formatStageLabel } from "@/lib/bracket-utils";
+import { useIsMatchLive, LiveStatusLabel } from "@/components/match-live";
 
-export default function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function MatchDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const [match, setMatch] = useState<any>(null);
   const [homeTeam, setHomeTeam] = useState<Team | null>(null);
   const [awayTeam, setAwayTeam] = useState<Team | null>(null);
   const [events, setEvents] = useState<MatchEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [id, setId] = useState<string>('');
+  const [id, setId] = useState<string>("");
 
   useEffect(() => {
     params.then((p) => setId(p.id));
@@ -37,7 +41,7 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
 
         // Load teams for display
         if (data.home_team_id && data.away_team_id) {
-          const teamsRes = await fetch('/api/teams');
+          const teamsRes = await fetch("/api/teams");
           const teamsData = await teamsRes.json();
           const home = teamsData.find((t: Team) => t.id === data.home_team_id);
           const away = teamsData.find((t: Team) => t.id === data.away_team_id);
@@ -45,7 +49,7 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
           setAwayTeam(away);
         }
       } catch (error) {
-        console.error('Failed to load match:', error);
+        console.error("Failed to load match:", error);
       } finally {
         setLoading(false);
       }
@@ -53,6 +57,8 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
 
     loadData();
   }, [id]);
+
+  const live = useIsMatchLive(match?.scheduled_at, match?.status);
 
   if (loading || !match || !homeTeam || !awayTeam) {
     return (
@@ -65,8 +71,7 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  const isFinished = match.status === 'finished';
-  const live = useIsMatchLive(match.scheduled_at, match.status);
+  const isFinished = match.status === "finished";
   const scheduledDate = new Date(match.scheduled_at);
   const byMinute = (a: MatchEvent, b: MatchEvent) =>
     (a.minute ?? 0) - (b.minute ?? 0);
@@ -112,20 +117,21 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
                   </h2>
                 </div>
 
-                {/* Ngày · Giờ · vs / tỉ số */}
                 <div className="flex flex-col items-center justify-center gap-1 text-center">
                   <p className="text-sm text-muted-foreground capitalize">
-                    {format(scheduledDate, 'EEEE, dd/MM/yyyy', { locale: vi })}
+                    {format(scheduledDate, "EEEE, dd/MM/yyyy", { locale: vi })}
                   </p>
                   <p className="text-2xl font-bold tabular-nums text-foreground">
-                    {format(scheduledDate, 'HH:mm', { locale: vi })}
+                    {format(scheduledDate, "HH:mm", { locale: vi })}
                   </p>
                   {isFinished ? (
                     <div className="mt-2 rounded-lg bg-muted px-6 py-4">
                       <div className="text-4xl font-bold tabular-nums text-foreground sm:text-5xl">
                         {match.home_score} – {match.away_score}
                       </div>
-                      <p className="mt-2 text-xs font-semibold uppercase text-muted-foreground">Kết thúc</p>
+                      <p className="mt-2 text-xs font-semibold uppercase text-muted-foreground">
+                        Kết thúc
+                      </p>
                     </div>
                   ) : live ? (
                     <div className="mt-2 rounded-lg border-2 border-blue-500/45 bg-blue-500/10 px-8 py-5 dark:border-blue-400/35 dark:bg-blue-500/15">
@@ -135,8 +141,12 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                   ) : (
                     <div className="mt-2 rounded-lg bg-muted px-8 py-4">
-                      <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground">vs</p>
-                      <p className="mt-2 text-xs text-muted-foreground">Chờ đá</p>
+                      <p className="text-lg font-semibold uppercase tracking-widest text-muted-foreground">
+                        vs
+                      </p>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Chờ đá
+                      </p>
                     </div>
                   )}
                 </div>
@@ -188,20 +198,22 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
                           >
                             <div className="flex min-w-0 items-center gap-2">
                               <span className="shrink-0" aria-hidden>
-                                {event.event_type === 'goal' && '⚽'}
-                                {event.event_type === 'own_goal' && '⚽'}
-                                {event.event_type === 'yellow' && '🟨'}
-                                {event.event_type === 'red' && '🟥'}
+                                {event.event_type === "goal" && "⚽"}
+                                {event.event_type === "own_goal" && "⚽"}
+                                {event.event_type === "yellow" && "🟨"}
+                                {event.event_type === "red" && "🟥"}
                               </span>
                               <span className="truncate text-foreground">
-                                {event.player_name || '—'}
-                                {event.event_type === 'own_goal' && (
-                                  <span className="ml-1 text-xs text-muted-foreground">(phản lưới)</span>
+                                {event.player_name || "—"}
+                                {event.event_type === "own_goal" && (
+                                  <span className="ml-1 text-xs text-muted-foreground">
+                                    (phản lưới)
+                                  </span>
                                 )}
                               </span>
                             </div>
                             <span className="shrink-0 tabular-nums text-muted-foreground">
-                              {event.minute != null ? `${event.minute}'` : '—'}
+                              {event.minute != null ? `${event.minute}'` : "—"}
                             </span>
                           </li>
                         ))
@@ -227,20 +239,22 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
                           >
                             <div className="flex min-w-0 items-center gap-2">
                               <span className="shrink-0" aria-hidden>
-                                {event.event_type === 'goal' && '⚽'}
-                                {event.event_type === 'own_goal' && '⚽'}
-                                {event.event_type === 'yellow' && '🟨'}
-                                {event.event_type === 'red' && '🟥'}
+                                {event.event_type === "goal" && "⚽"}
+                                {event.event_type === "own_goal" && "⚽"}
+                                {event.event_type === "yellow" && "🟨"}
+                                {event.event_type === "red" && "🟥"}
                               </span>
                               <span className="truncate text-foreground">
-                                {event.player_name || '—'}
-                                {event.event_type === 'own_goal' && (
-                                  <span className="ml-1 text-xs text-muted-foreground">(phản lưới)</span>
+                                {event.player_name || "—"}
+                                {event.event_type === "own_goal" && (
+                                  <span className="ml-1 text-xs text-muted-foreground">
+                                    (phản lưới)
+                                  </span>
                                 )}
                               </span>
                             </div>
                             <span className="shrink-0 tabular-nums text-muted-foreground">
-                              {event.minute != null ? `${event.minute}'` : '—'}
+                              {event.minute != null ? `${event.minute}'` : "—"}
                             </span>
                           </li>
                         ))
