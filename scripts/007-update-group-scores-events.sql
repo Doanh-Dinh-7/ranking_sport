@@ -26,6 +26,9 @@ WHERE match_id IN (
       OR (h.short_name = '49K14.1' AND a.short_name = '50K14.2')
       OR (h.short_name = '49K14.2+49K21.1' AND a.short_name = '50K21.1')
       OR (h.short_name = '48K21.2+48K05' AND a.short_name = '48K14.2')
+      OR (h.short_name = '49K14.2+49K21.1' AND a.short_name = '50K14.2')
+      OR (h.short_name = '49K05+51K05' AND a.short_name = '50K21.2+50K05')
+      OR (h.short_name = '49K14.1' AND a.short_name = '50K21.1')
     )
 );
 
@@ -47,7 +50,10 @@ FROM (
     ('51K36+51K36P', '50K21.2+50K05', 2, 3),
     ('49K14.1', '50K14.2', 1, 3),
     ('49K14.2+49K21.1', '50K21.1', 5, 0),
-    ('48K21.2+48K05', '48K14.2', 1, 6)
+    ('48K21.2+48K05', '48K14.2', 1, 6),
+    ('49K14.2+49K21.1', '50K14.2', 0, 3),
+    ('49K05+51K05', '50K21.2+50K05', 4, 2),
+    ('49K14.1', '50K21.1', 0, 4)
 ) AS v(hs_name, as_name, hs, as_)
 JOIN teams th ON th.short_name = v.hs_name
 JOIN teams ta ON ta.short_name = v.as_name
@@ -150,7 +156,7 @@ JOIN teams h ON m.home_team_id = h.id AND h.short_name = '50K21.1'
 JOIN teams a ON m.away_team_id = a.id AND a.short_name = '50K14.2'
 WHERE m.stage = 'group';
 
--- Match 5: 51K14+51K21 2-2 48K14.2 — OG: bàn cho đội nhà
+-- Match 5: 51K14+51K21 2-2 48K14.2 — OG: bàn cho đội khách
 INSERT INTO match_events (match_id, team_id, event_type, player_name, minute)
 SELECT m.id, m.home_team_id, 'goal', x.player, x.minute
 FROM matches m
@@ -171,7 +177,7 @@ JOIN teams a ON m.away_team_id = a.id AND a.short_name = '48K14.2'
 WHERE m.stage = 'group';
 
 INSERT INTO match_events (match_id, team_id, event_type, player_name, minute)
-SELECT m.id, m.away_team_id, 'goal', 'Phạm Nguyên Khang (OG)', 19
+SELECT m.id, m.home_team_id, 'goal', 'Phạm Nguyên Khang (OG)', 19
 FROM matches m
 JOIN teams h ON m.home_team_id = h.id AND h.short_name = '51K14+51K21'
 JOIN teams a ON m.away_team_id = a.id AND a.short_name = '48K14.2'
@@ -290,6 +296,68 @@ SELECT m.id, m.home_team_id, 'goal', 'Trần Hiệp Lực', 8
 FROM matches m
 JOIN teams h ON m.home_team_id = h.id AND h.short_name = '48K21.2+48K05'
 JOIN teams a ON m.away_team_id = a.id AND a.short_name = '48K14.2'
+WHERE m.stage = 'group';
+
+-- Match 11: 49K14.2+49K21.1 0-3 50K14.2 — OG: bàn cho đội khách
+INSERT INTO match_events (match_id, team_id, event_type, player_name, minute)
+SELECT m.id, m.home_team_id, 'goal', 'Hồ Đức Hậu (OG)', 4
+FROM matches m
+JOIN teams h ON m.home_team_id = h.id AND h.short_name = '49K14.2+49K21.1'
+JOIN teams a ON m.away_team_id = a.id AND a.short_name = '50K14.2'
+WHERE m.stage = 'group';
+
+INSERT INTO match_events (match_id, team_id, event_type, player_name, minute)
+SELECT m.id, m.away_team_id, 'goal', x.player, x.minute
+FROM matches m
+JOIN teams h ON m.home_team_id = h.id AND h.short_name = '49K14.2+49K21.1'
+JOIN teams a ON m.away_team_id = a.id AND a.short_name = '50K14.2'
+CROSS JOIN (
+  VALUES
+    ('Nguyễn Nhất Huy', 15),
+    ('Lê Văn Trường', 18)
+) AS x(player, minute)
+WHERE m.stage = 'group';
+
+-- Match 12: 49K05+51K05 4-2 50K21.2+50K05
+INSERT INTO match_events (match_id, team_id, event_type, player_name, minute)
+SELECT m.id, m.home_team_id, 'goal', x.player, x.minute
+FROM matches m
+JOIN teams h ON m.home_team_id = h.id AND h.short_name = '49K05+51K05'
+JOIN teams a ON m.away_team_id = a.id AND a.short_name = '50K21.2+50K05'
+CROSS JOIN (
+  VALUES
+    ('Nguyễn Phú Sang', 6),
+    ('Nguyễn Phú Sang', 13),
+    ('Nguyễn Phú Sang', 16),
+    ('Tô Nguyễn Quốc Bảo', 2)
+) AS x(player, minute)
+WHERE m.stage = 'group';
+
+INSERT INTO match_events (match_id, team_id, event_type, player_name, minute)
+SELECT m.id, m.away_team_id, 'goal', x.player, x.minute
+FROM matches m
+JOIN teams h ON m.home_team_id = h.id AND h.short_name = '49K05+51K05'
+JOIN teams a ON m.away_team_id = a.id AND a.short_name = '50K21.2+50K05'
+CROSS JOIN (
+  VALUES
+    ('Hà Thái Bảo', 4),
+    ('Châu Gia Huy', 16)
+) AS x(player, minute)
+WHERE m.stage = 'group';
+
+-- Match 13: 49K14.1 0-4 50K21.1
+INSERT INTO match_events (match_id, team_id, event_type, player_name, minute)
+SELECT m.id, m.away_team_id, 'goal', x.player, x.minute
+FROM matches m
+JOIN teams h ON m.home_team_id = h.id AND h.short_name = '49K14.1'
+JOIN teams a ON m.away_team_id = a.id AND a.short_name = '50K21.1'
+CROSS JOIN (
+  VALUES
+    ('Nguyễn Bảo Khanh', 0),
+    ('Hồ Quốc Anh', 10),
+    ('Ton Lương Huy', 14),
+    ('Nguyễn Hoàn Vũ', 49)
+) AS x(player, minute)
 WHERE m.stage = 'group';
 
 COMMIT;

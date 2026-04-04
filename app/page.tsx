@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { MatchCard } from "@/components/match-card";
 import { StandingsTable } from "@/components/standings-table";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/tournament";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { isMatchInProgress } from "@/lib/match-time";
 
 export default function Home() {
   const [stats, setStats] = useState({
@@ -27,6 +28,12 @@ export default function Home() {
   const [standings, setStandings] = useState<Standing[]>([]);
   const [teams, setTeams] = useState<{ [id: string]: Team }>({});
   const [loading, setLoading] = useState(true);
+  const [clock, setClock] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setClock(new Date()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -80,6 +87,16 @@ export default function Home() {
 
     loadData();
   }, []);
+
+  const liveMatches = useMemo(
+    () =>
+      matches.filter((m) => isMatchInProgress(m.scheduled_at, m.status, clock)),
+    [matches, clock],
+  );
+  const liveMatchIds = useMemo(
+    () => new Set(liveMatches.map((m) => m.id)),
+    [liveMatches],
+  );
 
   if (loading) {
     return (
@@ -187,6 +204,39 @@ export default function Home() {
             </Card>
           </div>
 
+          {/* Trận đang diễn ra (theo lịch + cửa sổ thời gian, đồng bộ match-live) */}
+          {liveMatches.length > 0 && (
+            <Card className="mb-8 border-blue-500/35 bg-blue-500/4 dark:bg-blue-500/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-blue-700 dark:text-blue-400">
+                  Trận đang diễn ra
+                </CardTitle>
+              </CardHeader>
+              <CardContent
+                className={
+                  liveMatches.length > 1
+                    ? "grid gap-4 sm:grid-cols-2"
+                    : undefined
+                }
+              >
+                {liveMatches.map((m) => {
+                  const home = teams[m.home_team_id];
+                  const away = teams[m.away_team_id];
+                  if (!home || !away) return null;
+                  return (
+                    <MatchCard
+                      key={m.id}
+                      match={m}
+                      homeTeam={home}
+                      awayTeam={away}
+                      variant="full"
+                    />
+                  );
+                })}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Latest and Next Match */}
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             {latestMatch && (
@@ -205,7 +255,7 @@ export default function Home() {
               </Card>
             )}
 
-            {nextMatch && (
+            {nextMatch && !liveMatchIds.has(nextMatch.id) && (
               <Card className="border-border">
                 <CardHeader>
                   <CardTitle className="text-lg">Trận sắp tới</CardTitle>

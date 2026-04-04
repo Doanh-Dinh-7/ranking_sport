@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatStageLabel } from '@/lib/bracket-utils';
+import { useIsMatchLive, LiveStatusLabel } from '@/components/match-live';
 
 export default function MatchDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [match, setMatch] = useState<any>(null);
@@ -65,6 +66,7 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   const isFinished = match.status === 'finished';
+  const live = useIsMatchLive(match.scheduled_at, match.status);
   const scheduledDate = new Date(match.scheduled_at);
   const byMinute = (a: MatchEvent, b: MatchEvent) =>
     (a.minute ?? 0) - (b.minute ?? 0);
@@ -124,6 +126,12 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
                         {match.home_score} – {match.away_score}
                       </div>
                       <p className="mt-2 text-xs font-semibold uppercase text-muted-foreground">Kết thúc</p>
+                    </div>
+                  ) : live ? (
+                    <div className="mt-2 rounded-lg border-2 border-blue-500/45 bg-blue-500/10 px-8 py-5 dark:border-blue-400/35 dark:bg-blue-500/15">
+                      <div className="flex justify-center">
+                        <LiveStatusLabel className="text-sm sm:text-base" />
+                      </div>
                     </div>
                   ) : (
                     <div className="mt-2 rounded-lg bg-muted px-8 py-4">

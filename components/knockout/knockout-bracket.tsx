@@ -75,27 +75,27 @@ function BracketStageHeader({
       className={cn(
         "rounded-md border border-border bg-muted/60 px-2 py-2.5 text-center shadow-sm",
         "flex min-h-14 flex-col items-center justify-center gap-1",
-        live && "border-emerald-500/35 bg-emerald-500/6",
+        live && "border-blue-500/35 bg-blue-500/6",
       )}
     >
       <div className="flex flex-wrap items-center justify-center gap-2">
         <span
           className={cn(
             "text-[11px] font-bold uppercase tracking-widest sm:text-xs",
-            live ? "text-primary" : "text-foreground",
+            live ? "text-blue-700 dark:text-blue-400" : "text-foreground",
           )}
         >
           {children}
         </span>
         {live && (
           <span className="relative flex h-2 w-2 shrink-0" aria-hidden>
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
           </span>
         )}
       </div>
       {live && (
-        <span className="text-[10px] font-semibold leading-none text-emerald-600 dark:text-emerald-400">
+        <span className="text-[10px] font-semibold leading-none text-blue-600 dark:text-blue-400">
           Đang diễn ra
         </span>
       )}

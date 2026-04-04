@@ -3,6 +3,7 @@ import { Match, Team } from "@/lib/supabase";
 import { formatStageLabel } from "@/lib/bracket-utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { MatchCardStatus } from "@/components/match-live";
 import { TeamBadge, TeamLogo } from "./team-badge";
 
 interface MatchCardProps {
@@ -19,7 +20,6 @@ export function MatchCard({
   variant = "compact",
 }: MatchCardProps) {
   const isFinished = match.status === "finished";
-  const isScheduled = match.status === "scheduled";
   const scheduledDate = new Date(match.scheduled_at);
 
   return (
@@ -30,16 +30,10 @@ export function MatchCard({
           <span className="text-xs font-semibold text-muted-foreground uppercase">
             {formatStageLabel(match.stage, match.home_team?.group_name)}
           </span>
-          {isFinished && (
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase">
-              Kết thúc
-            </span>
-          )}
-          {isScheduled && (
-            <span className="text-xs font-semibold text-primary uppercase">
-              Chờ
-            </span>
-          )}
+          <MatchCardStatus
+            scheduledAt={match.scheduled_at}
+            status={match.status}
+          />
         </div>
 
         {/* Match info */}
