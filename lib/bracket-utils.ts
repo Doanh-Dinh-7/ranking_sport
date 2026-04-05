@@ -25,15 +25,11 @@ export function sortByBracketSlot(matches: MatchWithTeams[]): MatchWithTeams[] {
   );
 }
 
-/**
- * QF index 0..3 → SF (0|1) và hàng home/away.
- * Bố cục UI: QF0+QF2 → SF0, QF1+QF3 → SF1 — khớp với knockout-bracket.
- */
 export const QF_TO_SF: { sfIndex: 0 | 1; side: "home" | "away" }[] = [
-  { sfIndex: 0, side: "home" }, // q0 → sf0 home
-  { sfIndex: 1, side: "home" }, // q1 → sf1 home
-  { sfIndex: 0, side: "away" }, // q2 → sf0 away
-  { sfIndex: 1, side: "away" }, // q3 → sf1 away
+  { sfIndex: 0, side: "home" }, // TK1 → sf0 home (W-QF1)
+  { sfIndex: 0, side: "away" }, // TK2 → sf0 away (W-QF2)
+  { sfIndex: 1, side: "home" }, // TK3 → sf1 home (W-QF3)
+  { sfIndex: 1, side: "away" }, // TK4 → sf1 away (W-QF4)
 ];
 
 /** SF index → final home or away slot. */

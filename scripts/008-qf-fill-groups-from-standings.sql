@@ -4,8 +4,8 @@
 -- Quy tắc xếp hạng: điểm → hiệu số → bàn thắng (giống standings-table).
 --
 -- TK slot 1: Nhất A vs Nhì B  → home NA1, away NB2
--- TK slot 2: Nhất B vs Nhì A  → home NB1, away NA2
--- TK slot 3: Nhất C vs Nhì D  → home NC1, away ND2
+-- TK slot 2: Nhất C vs Nhì D  → home NC1, away ND2
+-- TK slot 3: Nhất B vs Nhì A  → home NB1, away NA2
 -- TK slot 4: Nhất D vs Nhì C  → home ND1, away NC2
 
 BEGIN;
@@ -33,7 +33,7 @@ FROM (
   FROM standings s
   INNER JOIN teams t ON t.id = s.team_id AND t.group_name = 'A'
 ) AS r
-WHERE m.stage = 'qf' AND m.bracket_slot = 2
+WHERE m.stage = 'qf' AND m.bracket_slot = 3
   AND m.away_team_id = (SELECT id FROM teams WHERE short_name = 'NA2')
   AND r.rk = 2;
 
@@ -47,7 +47,7 @@ FROM (
   FROM standings s
   INNER JOIN teams t ON t.id = s.team_id AND t.group_name = 'B'
 ) AS r
-WHERE m.stage = 'qf' AND m.bracket_slot = 2
+WHERE m.stage = 'qf' AND m.bracket_slot = 3
   AND m.home_team_id = (SELECT id FROM teams WHERE short_name = 'NB1')
   AND r.rk = 1;
 
@@ -74,7 +74,7 @@ FROM (
   FROM standings s
   INNER JOIN teams t ON t.id = s.team_id AND t.group_name = 'C'
 ) AS r
-WHERE m.stage = 'qf' AND m.bracket_slot = 3
+WHERE m.stage = 'qf' AND m.bracket_slot = 2
   AND m.home_team_id = (SELECT id FROM teams WHERE short_name = 'NC1')
   AND r.rk = 1;
 
@@ -114,7 +114,7 @@ FROM (
   FROM standings s
   INNER JOIN teams t ON t.id = s.team_id AND t.group_name = 'D'
 ) AS r
-WHERE m.stage = 'qf' AND m.bracket_slot = 3
+WHERE m.stage = 'qf' AND m.bracket_slot = 2
   AND m.away_team_id = (SELECT id FROM teams WHERE short_name = 'ND2')
   AND r.rk = 2;
 

@@ -105,14 +105,14 @@ UNION ALL SELECT k495, k502, v_lqd, '2026-04-03 20:30:00+07'::timestamptz, NULL:
 UNION ALL SELECT k491, k5021, v_lqd, '2026-04-03 20:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'group', 'scheduled', NULL::integer FROM v, t
 UNION ALL SELECT k4821, k501, v_lqd, '2026-04-04 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'group', 'scheduled', NULL::integer FROM v, t
 UNION ALL SELECT k492, k491, v_lqd, '2026-04-05 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'group', 'scheduled', NULL::integer FROM v, t
--- Tứ kết: Nhất A vs Nhì B; Nhất B vs Nhì A; Nhất C vs Nhì D; Nhất D vs Nhì C
+-- Tứ kết: TK1 Nhất A vs Nhì B; TK2 Nhất C vs Nhì D; TK3 Nhất B vs Nhì A; TK4 Nhất D vs Nhì C
 UNION ALL SELECT na1, nb2, v_lqd, '2026-04-07 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'qf', 'scheduled', 1 FROM v, t
-UNION ALL SELECT nb1, na2, v_lqd, '2026-04-07 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'qf', 'scheduled', 2 FROM v, t
-UNION ALL SELECT nc1, nd2, v_lqd, '2026-04-07 20:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'qf', 'scheduled', 3 FROM v, t
+UNION ALL SELECT nc1, nd2, v_lqd, '2026-04-07 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'qf', 'scheduled', 2 FROM v, t
+UNION ALL SELECT nb1, na2, v_lqd, '2026-04-07 20:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'qf', 'scheduled', 3 FROM v, t
 UNION ALL SELECT nd1, nc2, v_lqd, '2026-04-07 20:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'qf', 'scheduled', 4 FROM v, t
--- Bán kết: Thắng 1 vs Thắng 3; Thắng 2 vs Thắng 4
-UNION ALL SELECT wqf1, wqf3, v_lqd, '2026-04-09 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'sf', 'scheduled', 1 FROM v, t
-UNION ALL SELECT wqf2, wqf4, v_lqd, '2026-04-09 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'sf', 'scheduled', 2 FROM v, t
+-- Bán kết: Thắng TK1 vs Thắng TK2; Thắng TK3 vs Thắng TK4 (khớp UI + trigger 009)
+UNION ALL SELECT wqf1, wqf2, v_lqd, '2026-04-09 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'sf', 'scheduled', 1 FROM v, t
+UNION ALL SELECT wqf3, wqf4, v_lqd, '2026-04-09 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'sf', 'scheduled', 2 FROM v, t
 -- Tranh hạng 3 + Chung kết (Sân Trường ĐH Kinh Tế)
 UNION ALL SELECT lsf1, lsf2, vkt, '2026-04-11 17:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'third_place', 'scheduled', 1 FROM v, t
 UNION ALL SELECT wsf1, wsf2, vkt, '2026-04-11 19:30:00+07'::timestamptz, NULL::integer, NULL::integer, 'final', 'scheduled', 1 FROM v, t;

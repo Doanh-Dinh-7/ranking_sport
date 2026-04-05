@@ -374,7 +374,7 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
           {/* Cột Vô địch: không dùng BracketStageHeader — canh chiều cao hàng tiêu đề */}
           <div className="min-h-14" aria-hidden />
 
-          {(qf0 || qf2) && (
+          {(qf0 || qf1) && (
             <div className="col-start-1 row-start-2 flex flex-col gap-4 items-center justify-center">
               {qf0 && (
                 <BracketMatchCard
@@ -383,11 +383,11 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
                   setAwayRowRef={setQfAway(0)}
                 />
               )}
-              {qf2 && (
+              {qf1 && (
                 <BracketMatchCard
-                  match={qf2}
-                  setHomeRowRef={setQfHome(2)}
-                  setAwayRowRef={setQfAway(2)}
+                  match={qf1}
+                  setHomeRowRef={setQfHome(1)}
+                  setAwayRowRef={setQfAway(1)}
                 />
               )}
             </div>
@@ -448,13 +448,13 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
             </div>
           )}
 
-          {(qf1 || qf3) && (
+          {(qf2 || qf3) && (
             <div className="col-start-1 row-start-3 flex flex-col gap-4 items-center justify-center">
-              {qf1 && (
+              {qf2 && (
                 <BracketMatchCard
-                  match={qf1}
-                  setHomeRowRef={setQfHome(1)}
-                  setAwayRowRef={setQfAway(1)}
+                  match={qf2}
+                  setHomeRowRef={setQfHome(2)}
+                  setAwayRowRef={setQfAway(2)}
                 />
               )}
               {qf3 && (
