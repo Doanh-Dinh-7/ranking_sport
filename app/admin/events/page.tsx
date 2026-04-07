@@ -239,20 +239,20 @@ export default function AdminMatchEventsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="mb-2 text-4xl font-bold text-foreground">
+        <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
           Diễn biến trận đấu
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground sm:text-base">
           Chọn trận, thêm / sửa / xóa sự kiện (ghi bàn, thẻ, phút).
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Card className="border-border">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+        <Card className="min-w-0 border-border">
           <CardHeader>
-            <CardTitle>Chọn trận & biểu mẫu</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Chọn trận & biểu mẫu</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -376,9 +376,9 @@ export default function AdminMatchEventsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border">
+        <Card className="min-w-0 border-border">
           <CardHeader>
-            <CardTitle>
+            <CardTitle className="text-base sm:text-lg">
               Danh sách sự kiện
               {selectedMatch && (
                 <span className="ml-2 text-sm font-normal text-muted-foreground">
@@ -395,7 +395,7 @@ export default function AdminMatchEventsPage() {
             ) : events.length === 0 ? (
               <p className="text-sm text-muted-foreground">Chưa có sự kiện.</p>
             ) : (
-              <ul className="max-h-128 space-y-2 overflow-y-auto">
+              <ul className="max-h-72 space-y-2 overflow-y-auto sm:max-h-96 lg:max-h-128">
                 {[...events]
                   .sort(
                     (a, b) => (a.minute ?? 0) - (b.minute ?? 0),

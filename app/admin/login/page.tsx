@@ -51,11 +51,11 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="fixed top-4 right-4 z-50">
+    <div className="relative flex min-h-dvh items-center justify-center bg-background px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+      <div className="fixed top-3 right-3 z-50 sm:top-4 sm:right-4">
         <ModeToggle />
       </div>
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md shadow-md">
         <CardHeader>
           <div className="flex items-center gap-3 mb-4">
             <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">

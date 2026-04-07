@@ -172,12 +172,12 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="mb-2 text-4xl font-bold text-foreground">
+        <h1 className="mb-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl lg:text-4xl">
           Tỉ số & trạng thái
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground sm:text-base">
           Chọn trận: <strong>Chờ đá</strong> → <strong>Đang diễn ra</strong>{" "}
           (nhập tỉ số, cập nhật diễn biến tại mục Diễn biến) →{" "}
           <strong>Kết thúc</strong> (BXH vòng bảng chỉ cập nhật khi kết thúc).
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
         <Card className="border-border">
           <CardContent className="pt-6">
             <p className="mb-1 text-sm text-muted-foreground">Chờ đá</p>
@@ -221,11 +221,11 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="min-w-0 lg:col-span-2">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Cập nhật trận</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Cập nhật trận</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSave} className="space-y-4">
@@ -350,13 +350,13 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Danh sách trận</CardTitle>
+              <CardTitle className="text-base sm:text-lg">Danh sách trận</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="max-h-112 space-y-2 overflow-y-auto">
+              <div className="max-h-72 space-y-2 overflow-y-auto sm:max-h-96 lg:max-h-112">
                 {sortedMatches.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Không có trận</p>
                 ) : (
@@ -409,16 +409,18 @@ export default function AdminDashboard() {
 
       <Card className="border-border">
         <CardHeader>
-          <CardTitle>Bảng xếp hạng (xem nhanh)</CardTitle>
+          <CardTitle className="text-base sm:text-lg">
+            Bảng xếp hạng (xem nhanh)
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {["A", "B", "C", "D"].map((group) => (
-              <div key={group}>
+              <div key={group} className="min-w-0">
                 <h3 className="mb-3 font-semibold text-foreground">
                   Bảng {group}
                 </h3>
-                <div className="overflow-x-auto">
+                <div className="-mx-1 overflow-x-auto sm:mx-0">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground">
