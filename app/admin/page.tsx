@@ -23,9 +23,9 @@ export default function AdminDashboard() {
   const [selectedMatch, setSelectedMatch] = useState<string>("");
   const [homeScore, setHomeScore] = useState<string>("");
   const [awayScore, setAwayScore] = useState<string>("");
-  const [matchStatus, setMatchStatus] = useState<"scheduled" | "finished">(
-    "scheduled",
-  );
+  const [matchStatus, setMatchStatus] = useState<
+    "scheduled" | "live" | "finished"
+  >("scheduled");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -71,7 +71,13 @@ export default function AdminDashboard() {
     if (!m) return;
     setHomeScore(m.home_score != null ? String(m.home_score) : "");
     setAwayScore(m.away_score != null ? String(m.away_score) : "");
-    setMatchStatus(m.status === "finished" ? "finished" : "scheduled");
+    setMatchStatus(
+      m.status === "finished"
+        ? "finished"
+        : m.status === "live"
+          ? "live"
+          : "scheduled",
+    );
   }, [selectedMatch, matches]);
 
   async function handleSave(e: React.FormEvent) {
@@ -81,9 +87,9 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (matchStatus === "finished") {
+    if (matchStatus === "finished" || matchStatus === "live") {
       if (homeScore === "" || awayScore === "") {
-        setMessage("Kết thúc cần nhập tỉ số hai đội");
+        setMessage("Kết thúc / đang diễn ra cần nhập tỉ số hai đội");
         return;
       }
       const hs = parseInt(homeScore, 10);
@@ -102,7 +108,7 @@ export default function AdminDashboard() {
         match_id: selectedMatch,
         status: matchStatus,
       };
-      if (matchStatus === "finished") {
+      if (matchStatus === "finished" || matchStatus === "live") {
         body.home_score = parseInt(homeScore, 10);
         body.away_score = parseInt(awayScore, 10);
       } else {
@@ -148,6 +154,7 @@ export default function AdminDashboard() {
 
   const stats = {
     finished: matches.filter((m) => m.status === "finished").length,
+    live: matches.filter((m) => m.status === "live").length,
     scheduled: matches.filter((m) => m.status === "scheduled").length,
     total: matches.length,
   };
@@ -171,8 +178,9 @@ export default function AdminDashboard() {
           Tỉ số & trạng thái
         </h1>
         <p className="text-muted-foreground">
-          Chọn trận, chỉnh tỉ số, đặt <strong>Chờ đá</strong> hoặc{" "}
-          <strong>Kết thúc</strong> (trigger cập nhật BXH khi kết thúc).
+          Chọn trận: <strong>Chờ đá</strong> → <strong>Đang diễn ra</strong>{" "}
+          (nhập tỉ số, cập nhật diễn biến tại mục Diễn biến) →{" "}
+          <strong>Kết thúc</strong> (BXH vòng bảng chỉ cập nhật khi kết thúc).
         </p>
         <p className="mt-2 text-xs text-amber-700/90 dark:text-amber-400/90">
           Lưu ý: chuyển từ &quot;Kết thúc&quot; về &quot;Chờ đá&quot; có thể
@@ -180,12 +188,20 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Card className="border-border">
           <CardContent className="pt-6">
             <p className="mb-1 text-sm text-muted-foreground">Chờ đá</p>
             <p className="text-3xl font-bold text-foreground">
               {stats.scheduled}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-blue-500/30 bg-blue-500/5">
+          <CardContent className="pt-6">
+            <p className="mb-1 text-sm text-muted-foreground">Đang diễn ra</p>
+            <p className="text-3xl font-bold text-blue-700 dark:text-blue-400">
+              {stats.live}
             </p>
           </CardContent>
         </Card>
@@ -241,8 +257,9 @@ export default function AdminDashboard() {
                                 minute: "2-digit",
                               },
                             )}
-                            {match.status === "finished"
-                              ? ` · ${match.home_score}-${match.away_score}`
+                            {match.status === "finished" ||
+                            match.status === "live"
+                              ? ` · ${match.home_score ?? "—"}-${match.away_score ?? "—"}`
                               : ""}
                           </span>
                         </SelectItem>
@@ -256,15 +273,20 @@ export default function AdminDashboard() {
                   <Select
                     value={matchStatus}
                     onValueChange={(v) =>
-                      setMatchStatus(v as "scheduled" | "finished")
+                      setMatchStatus(v as "scheduled" | "live" | "finished")
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="scheduled">Chờ đá (scheduled)</SelectItem>
-                      <SelectItem value="finished">Kết thúc (finished)</SelectItem>
+                      <SelectItem value="scheduled">
+                        Chờ đá (scheduled)
+                      </SelectItem>
+                      <SelectItem value="live">Đang diễn ra (live)</SelectItem>
+                      <SelectItem value="finished">
+                        Kết thúc (finished)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -276,6 +298,7 @@ export default function AdminDashboard() {
                       type="number"
                       min={0}
                       disabled={matchStatus === "scheduled"}
+                      required={matchStatus !== "scheduled"}
                       value={homeScore}
                       onChange={(e) => setHomeScore(e.target.value)}
                       placeholder="0"
@@ -287,6 +310,7 @@ export default function AdminDashboard() {
                       type="number"
                       min={0}
                       disabled={matchStatus === "scheduled"}
+                      required={matchStatus !== "scheduled"}
                       value={awayScore}
                       onChange={(e) => setAwayScore(e.target.value)}
                       placeholder="0"
@@ -317,8 +341,9 @@ export default function AdminDashboard() {
 
               <div className="mt-6 border-t border-border pt-6">
                 <p className="text-xs text-muted-foreground">
-                  Khi trạng thái là <strong>Kết thúc</strong>, PostgreSQL trigger
-                  cập nhật bảng xếp hạng theo tỉ số.
+                  Trigger BXH chỉ chạy khi trạng thái <strong>Kết thúc</strong>{" "}
+                  (trận vòng bảng). Trạng thái <strong>Đang diễn ra</strong> chỉ
+                  để cập nhật tỉ số tạm và diễn biến.
                 </p>
               </div>
             </CardContent>
@@ -361,12 +386,16 @@ export default function AdminDashboard() {
                           className={
                             match.status === "finished"
                               ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-blue-600 dark:text-blue-400"
+                              : match.status === "live"
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-muted-foreground"
                           }
                         >
                           {match.status === "finished"
                             ? `Kết thúc ${match.home_score ?? "—"}-${match.away_score ?? "—"}`
-                            : "Chờ đá"}
+                            : match.status === "live"
+                              ? `Đang diễn ra ${match.home_score ?? "—"}-${match.away_score ?? "—"}`
+                              : "Chờ đá"}
                         </span>
                       </p>
                     </button>
@@ -405,7 +434,10 @@ export default function AdminDashboard() {
                         .filter((s) => s.group_name === group)
                         .slice(0, 4)
                         .map((standing, i) => (
-                          <tr key={standing.id} className="border-b border-border">
+                          <tr
+                            key={standing.id}
+                            className="border-b border-border"
+                          >
                             <td className="px-2 py-2 text-muted-foreground">
                               {i + 1}
                             </td>

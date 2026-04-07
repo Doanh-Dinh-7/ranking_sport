@@ -72,6 +72,8 @@ export default function MatchDetailPage({
   }
 
   const isFinished = match.status === "finished";
+  const isLive = match.status === "live";
+  const showScoreboard = isFinished || isLive;
   const scheduledDate = new Date(match.scheduled_at);
   const byMinute = (a: MatchEvent, b: MatchEvent) =>
     (a.minute ?? 0) - (b.minute ?? 0);
@@ -124,14 +126,26 @@ export default function MatchDetailPage({
                   <p className="text-2xl font-bold tabular-nums text-foreground">
                     {format(scheduledDate, "HH:mm", { locale: vi })}
                   </p>
-                  {isFinished ? (
-                    <div className="mt-2 rounded-lg bg-muted px-6 py-4">
+                  {showScoreboard ? (
+                    <div
+                      className={
+                        isFinished
+                          ? "mt-2 rounded-lg bg-muted px-6 py-4"
+                          : "mt-2 rounded-lg border-2 border-blue-500/45 bg-blue-500/10 px-6 py-4 dark:border-blue-400/35 dark:bg-blue-500/15"
+                      }
+                    >
                       <div className="text-4xl font-bold tabular-nums text-foreground sm:text-5xl">
-                        {match.home_score} – {match.away_score}
+                        {match.home_score ?? "—"} – {match.away_score ?? "—"}
                       </div>
-                      <p className="mt-2 text-xs font-semibold uppercase text-muted-foreground">
-                        Kết thúc
-                      </p>
+                      {isFinished ? (
+                        <p className="mt-2 text-xs font-semibold uppercase text-muted-foreground">
+                          Kết thúc
+                        </p>
+                      ) : (
+                        <div className="mt-3 flex justify-center">
+                          <LiveStatusLabel className="text-sm sm:text-base" />
+                        </div>
+                      )}
                     </div>
                   ) : live ? (
                     <div className="mt-2 rounded-lg border-2 border-blue-500/45 bg-blue-500/10 px-8 py-5 dark:border-blue-400/35 dark:bg-blue-500/15">
@@ -173,7 +187,7 @@ export default function MatchDetailPage({
           </Card>
 
           {/* Match Events — 2 cột theo đội nhà / đội khách */}
-          {isFinished && events.length > 0 && (
+          {showScoreboard && events.length > 0 && (
             <Card className="border-border">
               <CardHeader>
                 <CardTitle>Sự kiện trận đấu</CardTitle>

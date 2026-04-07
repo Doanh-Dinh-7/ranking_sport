@@ -20,10 +20,12 @@ export function MatchCard({
   variant = "compact",
 }: MatchCardProps) {
   const isFinished = match.status === "finished";
+  const showScores =
+    match.status === "finished" || match.status === "live";
   const scheduledDate = new Date(match.scheduled_at);
 
   return (
-    <Link href={`/matches/${match.id}`}>
+    <Link href={`/matches/${match.id}`} className="block w-full">
       <div className="bg-card rounded-lg p-4 hover:bg-accent/80 transition-colors cursor-pointer border border-border">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
@@ -53,14 +55,14 @@ export function MatchCard({
               <p className="text-sm font-semibold tabular-nums text-foreground">
                 {format(scheduledDate, "HH:mm", { locale: vi })}
               </p>
-              {isFinished ? (
+              {showScores ? (
                 <div className="mt-1 flex items-baseline gap-1.5">
                   <span className="text-lg font-bold text-foreground">
-                    {match.home_score}
+                    {match.home_score ?? "—"}
                   </span>
                   <span className="text-xs text-muted-foreground">-</span>
                   <span className="text-lg font-bold text-foreground">
-                    {match.away_score}
+                    {match.away_score ?? "—"}
                   </span>
                 </div>
               ) : (
@@ -89,17 +91,17 @@ export function MatchCard({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <TeamBadge team={homeTeam} size="sm" />
-                {isFinished && (
+                {showScores && (
                   <p className="text-2xl font-bold text-foreground">
-                    {match.home_score}
+                    {match.home_score ?? "—"}
                   </p>
                 )}
               </div>
               <div className="flex items-center justify-between">
                 <TeamBadge team={awayTeam} size="sm" />
-                {isFinished && (
+                {showScores && (
                   <p className="text-2xl font-bold text-foreground">
-                    {match.away_score}
+                    {match.away_score ?? "—"}
                   </p>
                 )}
               </div>

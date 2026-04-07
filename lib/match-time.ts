@@ -9,6 +9,7 @@ export function isMatchInProgress(
   status: string,
   at: Date = new Date(),
 ): boolean {
+  if (status === "live") return true;
   if (status !== "scheduled") return false;
   const start = new Date(scheduledAt).getTime();
   if (Number.isNaN(start)) return false;

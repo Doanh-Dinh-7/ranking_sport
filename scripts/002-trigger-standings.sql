@@ -1,14 +1,21 @@
 -- Football Tournament Platform — PostgreSQL Trigger for Auto-Standings
 -- Execute AFTER 001-tournament-schema.sql
--- This trigger auto-calculates standings whenever a match is finished
+-- Chỉ cập nhật standings khi trận VÒNG BẢNG (stage = 'group') kết thúc / đổi tỉ số.
+-- Trận qf/sf/final/third_place không làm thay đổi bảng xếp hạng vòng bảng.
 
 -- Create function to update standings
 CREATE OR REPLACE FUNCTION update_standings_on_match_finish()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Only process when match is marked as 'finished'
-  IF NEW.status = 'finished' AND (OLD.status IS DISTINCT FROM NEW.status OR NEW.home_score IS DISTINCT FROM OLD.home_score OR NEW.away_score IS DISTINCT FROM OLD.away_score) THEN
-    
+  -- Chỉ xử lý trận vòng bảng; knockout không đụng standings
+  IF NEW.status = 'finished'
+     AND NEW.stage = 'group'
+     AND (
+       OLD.status IS DISTINCT FROM NEW.status
+       OR NEW.home_score IS DISTINCT FROM OLD.home_score
+       OR NEW.away_score IS DISTINCT FROM OLD.away_score
+     ) THEN
+
     -- Ensure standings entries exist for both teams
     INSERT INTO standings (team_id, group_name, played, won, drawn, lost, goals_for, goals_against, points)
     SELECT id, group_name, 0, 0, 0, 0, 0, 0, 0
@@ -16,18 +23,18 @@ BEGIN
     WHERE id IN (NEW.home_team_id, NEW.away_team_id)
     ON CONFLICT (team_id) DO NOTHING;
 
-    -- Recalculate standings for home team
+    -- Recalculate standings for home team (chỉ trận stage = 'group')
     UPDATE standings SET
-      played = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.home_team_id OR away_team_id = NEW.home_team_id) AND status = 'finished'),
-      won = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.home_team_id AND home_score > away_score AND status = 'finished') +
-            (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.home_team_id AND away_score > home_score AND status = 'finished'),
-      drawn = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.home_team_id OR away_team_id = NEW.home_team_id) AND home_score = away_score AND status = 'finished'),
-      lost = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.home_team_id AND home_score < away_score AND status = 'finished') +
-             (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.home_team_id AND away_score < home_score AND status = 'finished'),
-      goals_for = (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE home_team_id = NEW.home_team_id AND status = 'finished') +
-                  (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE away_team_id = NEW.home_team_id AND status = 'finished'),
-      goals_against = (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE home_team_id = NEW.home_team_id AND status = 'finished') +
-                      (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE away_team_id = NEW.home_team_id AND status = 'finished'),
+      played = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.home_team_id OR away_team_id = NEW.home_team_id) AND status = 'finished' AND stage = 'group'),
+      won = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.home_team_id AND home_score > away_score AND status = 'finished' AND stage = 'group') +
+            (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.home_team_id AND away_score > home_score AND status = 'finished' AND stage = 'group'),
+      drawn = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.home_team_id OR away_team_id = NEW.home_team_id) AND home_score = away_score AND status = 'finished' AND stage = 'group'),
+      lost = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.home_team_id AND home_score < away_score AND status = 'finished' AND stage = 'group') +
+             (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.home_team_id AND away_score < home_score AND status = 'finished' AND stage = 'group'),
+      goals_for = (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE home_team_id = NEW.home_team_id AND status = 'finished' AND stage = 'group') +
+                  (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE away_team_id = NEW.home_team_id AND status = 'finished' AND stage = 'group'),
+      goals_against = (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE home_team_id = NEW.home_team_id AND status = 'finished' AND stage = 'group') +
+                      (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE away_team_id = NEW.home_team_id AND status = 'finished' AND stage = 'group'),
       updated_at = NOW()
     WHERE team_id = NEW.home_team_id;
 
@@ -36,18 +43,18 @@ BEGIN
       points = (won * 3) + (drawn * 1)
     WHERE team_id = NEW.home_team_id;
 
-    -- Recalculate standings for away team
+    -- Recalculate standings for away team (chỉ trận stage = 'group')
     UPDATE standings SET
-      played = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.away_team_id OR away_team_id = NEW.away_team_id) AND status = 'finished'),
-      won = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.away_team_id AND home_score > away_score AND status = 'finished') +
-            (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.away_team_id AND away_score > home_score AND status = 'finished'),
-      drawn = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.away_team_id OR away_team_id = NEW.away_team_id) AND home_score = away_score AND status = 'finished'),
-      lost = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.away_team_id AND home_score < away_score AND status = 'finished') +
-             (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.away_team_id AND away_score < home_score AND status = 'finished'),
-      goals_for = (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE home_team_id = NEW.away_team_id AND status = 'finished') +
-                  (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE away_team_id = NEW.away_team_id AND status = 'finished'),
-      goals_against = (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE home_team_id = NEW.away_team_id AND status = 'finished') +
-                      (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE away_team_id = NEW.away_team_id AND status = 'finished'),
+      played = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.away_team_id OR away_team_id = NEW.away_team_id) AND status = 'finished' AND stage = 'group'),
+      won = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.away_team_id AND home_score > away_score AND status = 'finished' AND stage = 'group') +
+            (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.away_team_id AND away_score > home_score AND status = 'finished' AND stage = 'group'),
+      drawn = (SELECT COUNT(*) FROM matches WHERE (home_team_id = NEW.away_team_id OR away_team_id = NEW.away_team_id) AND home_score = away_score AND status = 'finished' AND stage = 'group'),
+      lost = (SELECT COUNT(*) FROM matches WHERE home_team_id = NEW.away_team_id AND home_score < away_score AND status = 'finished' AND stage = 'group') +
+             (SELECT COUNT(*) FROM matches WHERE away_team_id = NEW.away_team_id AND away_score < home_score AND status = 'finished' AND stage = 'group'),
+      goals_for = (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE home_team_id = NEW.away_team_id AND status = 'finished' AND stage = 'group') +
+                  (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE away_team_id = NEW.away_team_id AND status = 'finished' AND stage = 'group'),
+      goals_against = (SELECT COALESCE(SUM(away_score), 0) FROM matches WHERE home_team_id = NEW.away_team_id AND status = 'finished' AND stage = 'group') +
+                      (SELECT COALESCE(SUM(home_score), 0) FROM matches WHERE away_team_id = NEW.away_team_id AND status = 'finished' AND stage = 'group'),
       updated_at = NOW()
     WHERE team_id = NEW.away_team_id;
 

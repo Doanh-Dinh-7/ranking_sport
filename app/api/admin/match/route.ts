@@ -130,21 +130,27 @@ export async function PATCH(request: Request) {
         away_score !== undefined ? parseScore(away_score) : cur.away_score,
     };
 
-    if (merged.status === "finished") {
+    if (merged.status === "finished" || merged.status === "live") {
       if (
         merged.home_score === null ||
         merged.away_score === null ||
         merged.home_score < 0 ||
         merged.away_score < 0
       ) {
+        const label =
+          merged.status === "live" ? "Đang diễn ra" : "Kết thúc";
         return NextResponse.json(
           {
-            error:
-              'Trạng thái "Kết thúc" cần tỉ số nhà và khách (số nguyên ≥ 0)',
+            error: `Trạng thái "${label}" cần tỉ số nhà và khách (số nguyên ≥ 0)`,
           },
           { status: 400 },
         );
       }
+    }
+
+    if (merged.status === "scheduled") {
+      merged.home_score = null;
+      merged.away_score = null;
     }
 
     const { data: updatedMatch, error: updateError } = await supabase

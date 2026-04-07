@@ -71,7 +71,7 @@ export function MatchCardStatus({
     );
   }
 
-  if (live) {
+  if (status === "live" || live) {
     return <LiveStatusLabel />;
   }
 

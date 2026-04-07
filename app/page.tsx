@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { MatchCard } from "@/components/match-card";
 import { StandingsTable } from "@/components/standings-table";
-import { TeamBadge } from "@/components/team-badge";
 import { Match, Team, Standing } from "@/lib/supabase";
 import Image from "next/image";
 import {
@@ -15,6 +14,23 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { isMatchInProgress } from "@/lib/match-time";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
+
+/** Ngày lịch local YYYY-MM-DD (theo giờ máy người xem). */
+function calendarDateKeyLocal(iso: string): string {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${y}-${mo}-${da}`;
+}
+
+function formatDayLabel(dayKey: string): string {
+  const [y, m, da] = dayKey.split("-").map(Number);
+  const d = new Date(y, m - 1, da);
+  return format(d, "EEEE, dd/MM/yyyy", { locale: vi });
+}
 
 export default function Home() {
   const [stats, setStats] = useState({
@@ -88,11 +104,84 @@ export default function Home() {
     loadData();
   }, []);
 
-  const liveMatches = useMemo(
+  const finishedList = useMemo(
     () =>
-      matches.filter((m) => isMatchInProgress(m.scheduled_at, m.status, clock)),
+      matches
+        .filter((m: Match) => m.status === "finished")
+        .sort(
+          (a, b) =>
+            new Date(b.scheduled_at).getTime() -
+            new Date(a.scheduled_at).getTime(),
+        ),
+    [matches],
+  );
+
+  const liveList = useMemo(
+    () =>
+      matches
+        .filter((m: Match) =>
+          isMatchInProgress(m.scheduled_at, m.status, clock),
+        )
+        .sort(
+          (a, b) =>
+            new Date(a.scheduled_at).getTime() -
+            new Date(b.scheduled_at).getTime(),
+        ),
     [matches, clock],
   );
+
+  const upcomingList = useMemo(
+    () =>
+      matches
+        .filter(
+          (m: Match) =>
+            m.status === "scheduled" &&
+            !isMatchInProgress(m.scheduled_at, m.status, clock),
+        )
+        .sort(
+          (a, b) =>
+            new Date(a.scheduled_at).getTime() -
+            new Date(b.scheduled_at).getTime(),
+        ),
+    [matches, clock],
+  );
+
+  /** Ngày lịch gần nhất có trận đã kết thúc + mọi trận finished trong ngày đó. */
+  const { latestFinishedDay, finishedOnLatestDay } = useMemo(() => {
+    if (finishedList.length === 0) {
+      return {
+        latestFinishedDay: null as string | null,
+        finishedOnLatestDay: [] as Match[],
+      };
+    }
+    const latestDay = finishedList.reduce((max, m) => {
+      const k = calendarDateKeyLocal(m.scheduled_at);
+      return k > max ? k : max;
+    }, calendarDateKeyLocal(finishedList[0].scheduled_at));
+    const onDay = finishedList
+      .filter((m) => calendarDateKeyLocal(m.scheduled_at) === latestDay)
+      .sort(
+        (a, b) =>
+          new Date(b.scheduled_at).getTime() -
+          new Date(a.scheduled_at).getTime(),
+      );
+    return { latestFinishedDay: latestDay, finishedOnLatestDay: onDay };
+  }, [finishedList]);
+
+  /** Ngày lịch chờ đấu gần nhất (theo trận sớm nhất trong upcoming) + mọi trận chờ cùng ngày. */
+  const { nearestWaitDay, upcomingOnNearestDay } = useMemo(() => {
+    if (upcomingList.length === 0) {
+      return {
+        nearestWaitDay: null as string | null,
+        upcomingOnNearestDay: [] as Match[],
+      };
+    }
+    const day = calendarDateKeyLocal(upcomingList[0].scheduled_at);
+    const onDay = upcomingList.filter(
+      (m) => calendarDateKeyLocal(m.scheduled_at) === day,
+    );
+    return { nearestWaitDay: day, upcomingOnNearestDay: onDay };
+  }, [upcomingList]);
 
   if (loading) {
     return (
@@ -104,20 +193,6 @@ export default function Home() {
       </>
     );
   }
-
-  const latestMatch = matches
-    .filter((m) => m.status === "finished")
-    .sort(
-      (a, b) =>
-        new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime(),
-    )[0];
-
-  const nextMatch = matches
-    .filter((m) => m.status === "scheduled")
-    .sort(
-      (a, b) =>
-        new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
-    )[0];
 
   const groupA = standings.filter((s) => s.group_name === "A");
   const groupB = standings.filter((s) => s.group_name === "B");
@@ -157,7 +232,10 @@ export default function Home() {
                 </h1>
                 <p className="text-white/90 text-sm sm:text-base">
                   {stats.totalTeams} đội tham dự · {stats.totalMatches} trận đấu
-                  · {stats.totalGoals} bàn thắng · Vòng bảng đang diễn ra
+                  · {stats.totalGoals} bàn thắng
+                  {liveList.length > 0
+                    ? " · Có trận đang diễn ra"
+                    : " · Theo dõi lịch & kết quả bên dưới"}
                 </p>
               </div>
             </div>
@@ -201,71 +279,123 @@ export default function Home() {
             </Card>
           </div>
 
-          <div className="mb-8 grid gap-8 md:grid-cols-2">
-            {latestMatch && (
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Kết quả gần nhất</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MatchCard
-                    match={latestMatch}
-                    homeTeam={teams[latestMatch.home_team_id]}
-                    awayTeam={teams[latestMatch.away_team_id]}
-                    variant="full"
-                  />
-                </CardContent>
-              </Card>
+          <div className="mb-8 space-y-6">
+            {/* Hàng 1: đang diễn ra — full width */}
+            {liveList.length > 0 && (
+              <div className="w-full">
+                <Card className="w-full border-blue-500/35 bg-blue-500/4 dark:bg-blue-500/10">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold text-blue-700 dark:text-blue-400">
+                      Đang diễn ra
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground font-normal">
+                      Trạng thái &quot;live&quot; hoặc trong khung giờ trận (2h
+                      sau giờ lăn bóng) · {liveList.length} trận
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {liveList.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-6 text-center">
+                        Không có trận đang diễn ra
+                      </p>
+                    ) : (
+                      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {liveList.map((m) => {
+                          const home = teams[m.home_team_id];
+                          const away = teams[m.away_team_id];
+                          if (!home || !away) return null;
+                          return (
+                            <MatchCard
+                              key={m.id}
+                              match={m}
+                              homeTeam={home}
+                              awayTeam={away}
+                              variant="full"
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
-            {nextMatch && (
-              <Card className="border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg">Trận sắp tới</CardTitle>
+            {/* Hàng 2: kết quả ngày gần nhất | các trận chờ cùng ngày gần nhất */}
+            <div className="grid w-full gap-6 md:grid-cols-2">
+              <Card className="border-border min-w-0">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
+                    Kết quả ngày gần nhất
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    {latestFinishedDay
+                      ? `${formatDayLabel(latestFinishedDay)} · ${finishedOnLatestDay.length} trận`
+                      : "Chưa có trận kết thúc"}
+                  </p>
                 </CardHeader>
-                <CardContent>
-                  <MatchCard
-                    match={nextMatch}
-                    homeTeam={teams[nextMatch.home_team_id]}
-                    awayTeam={teams[nextMatch.away_team_id]}
-                    variant="full"
-                  />
+                <CardContent className="flex max-h-[min(520px,55vh)] flex-col gap-5 overflow-y-auto pt-0">
+                  {finishedOnLatestDay.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-6 text-center">
+                      Chưa có trận kết thúc
+                    </p>
+                  ) : (
+                    finishedOnLatestDay.map((m) => {
+                      const home = teams[m.home_team_id];
+                      const away = teams[m.away_team_id];
+                      if (!home || !away) return null;
+                      return (
+                        <div key={m.id} className="w-full min-w-0 shrink-0">
+                          <MatchCard
+                            match={m}
+                            homeTeam={home}
+                            awayTeam={away}
+                            variant="full"
+                          />
+                        </div>
+                      );
+                    })
+                  )}
                 </CardContent>
               </Card>
-            )}
+
+              <Card className="border-border min-w-0">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-primary">
+                    Lịch chờ — ngày gần nhất
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground font-normal">
+                    {nearestWaitDay
+                      ? `${formatDayLabel(nearestWaitDay)} · ${upcomingOnNearestDay.length} trận`
+                      : "Không có trận chờ"}
+                  </p>
+                </CardHeader>
+                <CardContent className="flex max-h-[min(520px,55vh)] flex-col gap-5 overflow-y-auto pt-0">
+                  {upcomingOnNearestDay.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-6 text-center">
+                      Không có trận chờ
+                    </p>
+                  ) : (
+                    upcomingOnNearestDay.map((m) => {
+                      const home = teams[m.home_team_id];
+                      const away = teams[m.away_team_id];
+                      if (!home || !away) return null;
+                      return (
+                        <div key={m.id} className="w-full min-w-0 shrink-0">
+                          <MatchCard
+                            match={m}
+                            homeTeam={home}
+                            awayTeam={away}
+                            variant="full"
+                          />
+                        </div>
+                      );
+                    })
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
-
-          {liveMatches.length > 0 && (
-            <Card className="mb-8 border-blue-500/35 bg-blue-500/4 dark:bg-blue-500/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-blue-700 dark:text-blue-400">
-                  Trận đang diễn ra
-                </CardTitle>
-              </CardHeader>
-              <CardContent
-                className={
-                  liveMatches.length > 1
-                    ? "grid gap-4 sm:grid-cols-2"
-                    : undefined
-                }
-              >
-                {liveMatches.map((m) => {
-                  const home = teams[m.home_team_id];
-                  const away = teams[m.away_team_id];
-                  if (!home || !away) return null;
-                  return (
-                    <MatchCard
-                      key={m.id}
-                      match={m}
-                      homeTeam={home}
-                      awayTeam={away}
-                      variant="full"
-                    />
-                  );
-                })}
-              </CardContent>
-            </Card>
-          )}
 
           {/* Standings */}
           <Tabs defaultValue="groupA" className="mb-8">

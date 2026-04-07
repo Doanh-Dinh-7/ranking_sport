@@ -66,15 +66,13 @@ export default function AdminMatchEventsPage() {
     load();
   }, []);
 
-  const sortedMatches = useMemo(
-    () =>
-      [...matches].sort(
-        (a, b) =>
-          new Date(a.scheduled_at).getTime() -
-          new Date(b.scheduled_at).getTime(),
-      ),
-    [matches],
-  );
+  const sortedMatches = useMemo(() => {
+    const byTime = (a: MatchRow, b: MatchRow) =>
+      new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+    const live = matches.filter((m) => m.status === "live").sort(byTime);
+    const rest = matches.filter((m) => m.status !== "live").sort(byTime);
+    return [...live, ...rest];
+  }, [matches]);
 
   useEffect(() => {
     if (!selectedMatch) {
@@ -266,8 +264,9 @@ export default function AdminMatchEventsPage() {
                 <SelectContent className="max-h-72">
                   {sortedMatches.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {getTeamName(m.home_team_id)} vs {getTeamName(m.away_team_id)}{" "}
-                      · {new Date(m.scheduled_at).toLocaleString("vi-VN")}
+                      {getTeamName(m.home_team_id)} vs {getTeamName(m.away_team_id)}
+                      {m.status === "live" ? " · LIVE" : ""} ·{" "}
+                      {new Date(m.scheduled_at).toLocaleString("vi-VN")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -276,6 +275,12 @@ export default function AdminMatchEventsPage() {
 
             {selectedMatch && current && (
               <form onSubmit={handleSubmit} className="space-y-4 border-t pt-4">
+                {current.status === "live" && (
+                  <p className="rounded-md border border-blue-500/35 bg-blue-500/10 px-3 py-2 text-sm text-blue-800 dark:text-blue-200">
+                    Trận <strong>đang diễn ra</strong> — ghi diễn biến tại đây; cập nhật
+                    tỉ số ở trang <strong>Tỉ số &amp; trạng thái</strong>.
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   {editingId ? "Sửa sự kiện" : "Thêm sự kiện mới"}
                 </p>
