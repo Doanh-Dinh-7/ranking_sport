@@ -73,16 +73,18 @@ function BracketStageHeader({
   return (
     <div
       className={cn(
-        "rounded-md border border-border bg-muted/60 px-2 py-2.5 text-center shadow-sm",
+        "rounded-md border px-2 py-2.5 text-center shadow-sm",
         "flex min-h-14 flex-col items-center justify-center gap-1",
-        live && "border-blue-500/35 bg-blue-500/6",
+        live
+          ? "border-blue-500/35 bg-blue-500/6"
+          : "border-primary/30 bg-primary/5",
       )}
     >
       <div className="flex flex-wrap items-center justify-center gap-2">
         <span
           className={cn(
             "text-[11px] font-bold uppercase tracking-widest sm:text-xs",
-            live ? "text-blue-700 dark:text-blue-400" : "text-foreground",
+            live ? "text-blue-700 dark:text-blue-400" : "text-primary",
           )}
         >
           {children}

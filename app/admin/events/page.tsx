@@ -81,7 +81,7 @@ export default function AdminMatchEventsPage() {
     }
     let cancelled = false;
     setLoadingEvents(true);
-    fetch(`/api/matches/${selectedMatch}`)
+    fetch(`/api/matches/${selectedMatch}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (!cancelled) setEvents(Array.isArray(d.events) ? d.events : []);
@@ -124,9 +124,13 @@ export default function AdminMatchEventsPage() {
 
   async function refreshEvents() {
     if (!selectedMatch) return;
-    const r = await fetch(`/api/matches/${selectedMatch}`);
+    setLoadingEvents(true);
+    const r = await fetch(`/api/matches/${selectedMatch}`, {
+      cache: "no-store",
+    });
     const d = await r.json();
     setEvents(Array.isArray(d.events) ? d.events : []);
+    setLoadingEvents(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -252,7 +256,9 @@ export default function AdminMatchEventsPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
         <Card className="min-w-0 border-border">
           <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Chọn trận & biểu mẫu</CardTitle>
+            <CardTitle className="text-base sm:text-lg">
+              Chọn trận & biểu mẫu
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -264,7 +270,8 @@ export default function AdminMatchEventsPage() {
                 <SelectContent className="max-h-72">
                   {sortedMatches.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {getTeamName(m.home_team_id)} vs {getTeamName(m.away_team_id)}
+                      {getTeamName(m.home_team_id)} vs{" "}
+                      {getTeamName(m.away_team_id)}
                       {m.status === "live" ? " · LIVE" : ""} ·{" "}
                       {new Date(m.scheduled_at).toLocaleString("vi-VN")}
                     </SelectItem>
@@ -277,8 +284,9 @@ export default function AdminMatchEventsPage() {
               <form onSubmit={handleSubmit} className="space-y-4 border-t pt-4">
                 {current.status === "live" && (
                   <p className="rounded-md border border-blue-500/35 bg-blue-500/10 px-3 py-2 text-sm text-blue-800 dark:text-blue-200">
-                    Trận <strong>đang diễn ra</strong> — ghi diễn biến tại đây; cập nhật
-                    tỉ số ở trang <strong>Tỉ số &amp; trạng thái</strong>.
+                    Trận <strong>đang diễn ra</strong> — ghi diễn biến tại đây;
+                    cập nhật tỉ số ở trang{" "}
+                    <strong>Tỉ số &amp; trạng thái</strong>.
                   </p>
                 )}
                 <p className="text-sm text-muted-foreground">
@@ -397,9 +405,7 @@ export default function AdminMatchEventsPage() {
             ) : (
               <ul className="max-h-72 space-y-2 overflow-y-auto sm:max-h-96 lg:max-h-128">
                 {[...events]
-                  .sort(
-                    (a, b) => (a.minute ?? 0) - (b.minute ?? 0),
-                  )
+                  .sort((a, b) => (a.minute ?? 0) - (b.minute ?? 0))
                   .map((ev) => (
                     <li
                       key={ev.id}

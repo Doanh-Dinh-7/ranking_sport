@@ -38,10 +38,6 @@ export default function KnockoutPage() {
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
                 Vòng loại trực tiếp
               </h1>
-              <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                Click vào trận đấu bất kỳ để xem chi tiết kết quả và timeline sự
-                kiện · Top 2 mỗi bảng đi tiếp
-              </p>
             </div>
           </div>
 
