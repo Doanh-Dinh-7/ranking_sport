@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { verifyAdminToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { revalidateTournamentData } from "@/lib/revalidate-tournament";
 
 export async function POST(request: Request) {
   try {
@@ -68,6 +69,12 @@ export async function POST(request: Request) {
       .from("standings")
       .select("*")
       .in("team_id", [updatedMatch.home_team_id, updatedMatch.away_team_id]);
+
+    if (standingsError) {
+      console.error("Standings query error:", standingsError);
+    }
+
+    revalidateTournamentData(match_id);
 
     return NextResponse.json(
       {
@@ -180,6 +187,8 @@ export async function PATCH(request: Request) {
       );
     }
 
+    revalidateTournamentData(match_id);
+
     return NextResponse.json(
       {
         success: true,
@@ -232,6 +241,8 @@ export async function PUT(request: Request) {
         { status: 500 },
       );
     }
+
+    revalidateTournamentData(match_id);
 
     return NextResponse.json(
       {

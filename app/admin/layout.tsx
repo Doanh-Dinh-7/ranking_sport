@@ -134,6 +134,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 active={pathname === '/admin/events'}
                 onNavigate={closeMobile}
               />
+              <NavLink
+                href="/admin/teams"
+                label="Master — Đội"
+                icon="Đ"
+                active={pathname === '/admin/teams'}
+                onNavigate={closeMobile}
+              />
+              <NavLink
+                href="/admin/groups"
+                label="Vòng bảng"
+                icon="B"
+                active={pathname === '/admin/groups'}
+                onNavigate={closeMobile}
+              />
+              <NavLink
+                href="/admin/schedules"
+                label="Lịch thi đấu"
+                icon="L"
+                active={pathname === '/admin/schedules'}
+                onNavigate={closeMobile}
+              />
             </nav>
             <div className="border-t border-border p-3">
               <Button onClick={handleLogout} variant="outline" className="w-full" size="sm">
@@ -182,6 +203,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             label="Diễn biến trận"
             icon="D"
             active={pathname === '/admin/events'}
+          />
+          <NavLink
+            href="/admin/teams"
+            label="Master — Đội"
+            icon="Đ"
+            active={pathname === '/admin/teams'}
+          />
+          <NavLink
+            href="/admin/groups"
+            label="Vòng bảng"
+            icon="B"
+            active={pathname === '/admin/groups'}
+          />
+          <NavLink
+            href="/admin/schedules"
+            label="Lịch thi đấu"
+            icon="L"
+            active={pathname === '/admin/schedules'}
           />
         </nav>
 

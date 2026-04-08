@@ -1,12 +1,14 @@
 import { supabase } from '@/lib/supabase';
 import { verifyAdminToken } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { revalidateTournamentData } from '@/lib/revalidate-tournament';
 
 const EVENT_TYPES = ['goal', 'own_goal', 'yellow', 'red'] as const;
 
 function validEventType(t: string): t is (typeof EVENT_TYPES)[number] {
   return EVENT_TYPES.includes(t as (typeof EVENT_TYPES)[number]);
 }
+
 
 /** Thêm sự kiện */
 export async function POST(request: Request) {
@@ -63,6 +65,8 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    revalidateTournamentData(match_id);
 
     return NextResponse.json({ success: true, event: row }, { status: 201 });
   } catch (e) {
@@ -143,6 +147,8 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Không tìm thấy sự kiện' }, { status: 404 });
     }
 
+    revalidateTournamentData((row as { match_id?: string }).match_id);
+
     return NextResponse.json({ success: true, event: row }, { status: 200 });
   } catch (e) {
     console.error(e);
@@ -166,6 +172,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Thiếu ?id=' }, { status: 400 });
     }
 
+    const { data: existing } = await supabase
+      .from('match_events')
+      .select('match_id')
+      .eq('id', id)
+      .single();
+
     const { error } = await supabase.from('match_events').delete().eq('id', id);
 
     if (error) {
@@ -175,6 +187,8 @@ export async function DELETE(request: Request) {
         { status: 500 },
       );
     }
+
+    revalidateTournamentData(existing?.match_id);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (e) {

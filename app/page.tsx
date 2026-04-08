@@ -54,22 +54,17 @@ export default function Home() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Load teams
-        const teamsRes = await fetch("/api/teams");
-        const teamsData = await teamsRes.json();
+        const dashboardRes = await fetch("/api/dashboard");
+        const dashboardData = await dashboardRes.json();
+        const teamsData = dashboardData.teams || [];
+        const matchesData = dashboardData.matches || [];
+        const standingsData = dashboardData.standings || [];
+
         const teamsMap = Object.fromEntries(
           teamsData.map((t: Team) => [t.id, t]),
         );
         setTeams(teamsMap);
-
-        // Load matches
-        const matchesRes = await fetch("/api/matches");
-        const matchesData = await matchesRes.json();
         setMatches(matchesData);
-
-        // Load standings
-        const standingsRes = await fetch("/api/standings");
-        const standingsData = await standingsRes.json();
         setStandings(standingsData);
 
         // Calculate stats

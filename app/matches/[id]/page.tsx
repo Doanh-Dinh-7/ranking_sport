@@ -38,16 +38,8 @@ export default function MatchDetailPage({
 
         setMatch(data);
         setEvents(data.events || []);
-
-        // Load teams for display
-        if (data.home_team_id && data.away_team_id) {
-          const teamsRes = await fetch("/api/teams");
-          const teamsData = await teamsRes.json();
-          const home = teamsData.find((t: Team) => t.id === data.home_team_id);
-          const away = teamsData.find((t: Team) => t.id === data.away_team_id);
-          setHomeTeam(home);
-          setAwayTeam(away);
-        }
+        setHomeTeam(data.home_team || null);
+        setAwayTeam(data.away_team || null);
       } catch (error) {
         console.error("Failed to load match:", error);
       } finally {

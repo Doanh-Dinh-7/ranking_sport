@@ -10,10 +10,10 @@ export async function GET(request: Request) {
     let query = supabase
       .from('matches')
       .select(`
-        *,
-        home_team:teams!home_team_id(*),
-        away_team:teams!away_team_id(*),
-        venue:venues(*)
+        id,home_team_id,away_team_id,venue_id,scheduled_at,home_score,away_score,stage,status,bracket_slot,created_at,updated_at,
+        home_team:teams!home_team_id(id,name,short_name,logo_url,group_name),
+        away_team:teams!away_team_id(id,name,short_name,logo_url,group_name),
+        venue:venues(id,name,address,lat,lng)
       `)
       .order('scheduled_at', { ascending: false });
 
@@ -35,7 +35,11 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=20, stale-while-revalidate=40',
+      },
+    });
   } catch (error) {
     console.error('Matches error:', error);
     return NextResponse.json(

@@ -8,7 +8,9 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('standings')
-      .select('*')
+      .select(
+        'id,team_id,group_name,played,won,drawn,lost,goals_for,goals_against,points,updated_at'
+      )
       .order('points', { ascending: false })
       .order('goals_against', { ascending: true })
       .order('goals_for', { ascending: false });
@@ -27,7 +29,11 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
+      },
+    });
   } catch (error) {
     console.error('Standings error:', error);
     return NextResponse.json(

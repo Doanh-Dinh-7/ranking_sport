@@ -15,15 +15,16 @@ export default function FixturesPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Load teams
-        const teamsRes = await fetch('/api/teams');
-        const teamsData = await teamsRes.json();
+        const [teamsRes, matchesRes] = await Promise.all([
+          fetch('/api/teams'),
+          fetch('/api/matches'),
+        ]);
+        const [teamsData, matchesData] = await Promise.all([
+          teamsRes.json(),
+          matchesRes.json(),
+        ]);
         const teamsMap = Object.fromEntries(teamsData.map((t: Team) => [t.id, t]));
         setTeams(teamsMap);
-
-        // Load matches
-        const matchesRes = await fetch('/api/matches');
-        const matchesData = await matchesRes.json();
         const sorted = matchesData.sort(
           (a: any, b: any) =>
             new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()

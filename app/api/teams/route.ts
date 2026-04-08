@@ -8,7 +8,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from('teams')
-      .select('*')
+      .select('id,name,short_name,logo_url,group_name,created_at')
       .order('group_name', { ascending: true })
       .order('name', { ascending: true });
 
@@ -26,7 +26,11 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error) {
     console.error('Teams error:', error);
     return NextResponse.json(

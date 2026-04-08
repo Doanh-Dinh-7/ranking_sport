@@ -2,7 +2,7 @@
  * Cửa sổ "đang diễn ra" sau giờ bóng lăn (scheduled_at).
  * Trận vẫn `scheduled` trong DB nhưng đã quá lâu → không coi là live (chờ cập nhật kết quả).
  */
-const MATCH_LIVE_WINDOW_MS = 2 * 60 * 60 * 1000; // 2 giờ
+const MATCH_LIVE_WINDOW_MS = 1 * 60 * 60 * 1000; // 1 giờ
 
 export function isMatchInProgress(
   scheduledAt: string | Date,

@@ -15,15 +15,16 @@ export default function StandingsPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        // Load teams
-        const teamsRes = await fetch('/api/teams');
-        const teamsData = await teamsRes.json();
+        const [teamsRes, standingsRes] = await Promise.all([
+          fetch('/api/teams'),
+          fetch('/api/standings'),
+        ]);
+        const [teamsData, standingsData] = await Promise.all([
+          teamsRes.json(),
+          standingsRes.json(),
+        ]);
         const teamsMap = Object.fromEntries(teamsData.map((t: Team) => [t.id, t]));
         setTeams(teamsMap);
-
-        // Load standings
-        const standingsRes = await fetch('/api/standings');
-        const standingsData = await standingsRes.json();
         setStandings(standingsData);
       } catch (error) {
         console.error('Failed to load standings:', error);

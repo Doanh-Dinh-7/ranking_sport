@@ -12,10 +12,10 @@ export async function GET(
     const { data: matchData, error: matchError } = await supabase
       .from('matches')
       .select(`
-        *,
-        home_team:teams!home_team_id(*),
-        away_team:teams!away_team_id(*),
-        venue:venues(*)
+        id,home_team_id,away_team_id,venue_id,scheduled_at,home_score,away_score,stage,status,bracket_slot,created_at,updated_at,
+        home_team:teams!home_team_id(id,name,short_name,logo_url,group_name),
+        away_team:teams!away_team_id(id,name,short_name,logo_url,group_name),
+        venue:venues(id,name,address,lat,lng)
       `)
       .eq('id', id)
       .single();
@@ -30,7 +30,7 @@ export async function GET(
     // Fetch match events
     const { data: events, error: eventsError } = await supabase
       .from('match_events')
-      .select('*')
+      .select('id,match_id,team_id,event_type,player_name,minute,created_at')
       .eq('match_id', id)
       .order('minute', { ascending: true });
 
@@ -41,6 +41,10 @@ export async function GET(
     return NextResponse.json({
       ...matchData,
       events: events || [],
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=20, stale-while-revalidate=40',
+      },
     });
   } catch (error) {
     console.error('Match detail error:', error);
