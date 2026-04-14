@@ -21,6 +21,7 @@ import { BracketMatchCard } from "./bracket-match-card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Trophy } from "lucide-react";
+import Image from "next/image";
 
 type RowPair = { home: HTMLDivElement | null; away: HTMLDivElement | null };
 
@@ -303,6 +304,12 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
   const sf1 = sf[1];
 
   const finalWinner = finalMatch ? getMatchWinner(finalMatch) : null;
+  const championTeam =
+    finalWinner === "home"
+      ? finalMatch?.home_team
+      : finalWinner === "away"
+        ? finalMatch?.away_team
+        : undefined;
 
   /** Một vòng coi là xong khi mọi trận đã có tỉ số phân định (có đội thắng). */
   const { headerQfLive, headerSfLive, headerFinalLive } = useMemo(() => {
@@ -347,19 +354,22 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
           className="absolute inset-0 w-full h-full min-h-[480px] pointer-events-none z-1 overflow-visible"
           aria-hidden
         >
-          {linePaths.map(({ d, active, key, dashed }) => (
-            <path
-              key={key}
-              d={d}
-              fill="none"
-              strokeWidth={active ? 3 : 1.75}
-              stroke={active ? "var(--bracket-line)" : "var(--border)"}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray={dashed ? "3 7" : undefined}
-              className={cn(!active && "opacity-60")}
-            />
-          ))}
+          {linePaths.map(({ d, active, key, dashed }) => {
+            const highlight = active && !dashed;
+            return (
+              <path
+                key={key}
+                d={d}
+                fill="none"
+                strokeWidth={highlight ? 3 : 1.75}
+                stroke={highlight ? "var(--bracket-line)" : "var(--border)"}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray={dashed ? "3 7" : undefined}
+                className={cn(!highlight && "opacity-60")}
+              />
+            );
+          })}
         </svg>
 
         <div
@@ -433,9 +443,25 @@ export function KnockoutBracket({ matches }: KnockoutBracketProps) {
             <div className="col-start-4 row-start-2 row-span-2 flex min-h-0 w-full items-center justify-center self-stretch">
               <div
                 ref={championRef}
-                className="flex w-full flex-col items-center gap-2 rounded-2xl border-2 border-primary/50 bg-card px-6 py-6 text-center"
+                className="flex w-full flex-col items-center gap-5 rounded-2xl border-2 border-primary/50 bg-card px-6 py-6 text-center"
               >
                 <Trophy className="size-12 text-primary" strokeWidth={1.25} />
+                {championTeam &&
+                  (championTeam.logo_url ? (
+                    <div className="size-14 shrink-0 overflow-hidden rounded-full border-2 border-primary/40 bg-muted">
+                      <Image
+                        src={championTeam.logo_url}
+                        alt={championTeam.name}
+                        width={56}
+                        height={56}
+                        className="size-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex size-14 shrink-0 items-center justify-center rounded-full border-2 border-primary/40 bg-linear-to-br from-primary to-chart-4 text-sm font-bold text-primary-foreground">
+                      {championTeam.short_name.slice(0, 2)}
+                    </div>
+                  ))}
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Vô địch
                 </p>

@@ -1,4 +1,4 @@
-# Giải Bóng Đá 2026 - Football Tournament Platform
+# Football Tournament 2026 — Tournament Platform
 
 A lightweight, simplified football tournament management platform built with Next.js and Supabase. Perfect for small-scale tournaments (< 16 teams, 1 season, 1 admin).
 
@@ -32,6 +32,38 @@ ADMIN_PASSWORD=your_secure_password_here
 ```
 
 Replace the credentials with your actual Supabase values and set a strong admin password.
+
+### 3b. Logo, banner, and home awards block (optional)
+
+These keys live in `.env` or `.env.local` (see `.env.example`). Values are read in [`lib/tournament.ts`](lib/tournament.ts) on the client, so they **must** use the `NEXT_PUBLIC_` prefix.
+
+| Environment variable | Purpose | Where it is used (summary) |
+|----------------------|---------|----------------------------|
+| `NEXT_PUBLIC_TOURNAMENT_LOGO_URL` | Tournament logo image | Home (logo on banner), navbar, admin layout, admin login; `app/layout.tsx` (favicon / Apple touch icon) |
+| `NEXT_PUBLIC_TOURNAMENT_BANNER_URL` | Large home hero banner | `app/page.tsx` |
+| `NEXT_PUBLIC_HOME_CHAMPION_IMAGE_URL` | Champion spotlight (wide image) | `app/page.tsx` — only when `NEXT_PUBLIC_IS_SHOW_AWARD` is enabled |
+| `NEXT_PUBLIC_HOME_AWARD_BEST_GOALKEEPER_IMAGE_URL` | Best goalkeeper of the tournament | Same home spotlight section |
+| `NEXT_PUBLIC_HOME_AWARD_BEST_PLAYER_IMAGE_URL` | Player of the tournament | Same spotlight section |
+| `NEXT_PUBLIC_HOME_AWARD_TOP_SCORER_IMAGE_URL` | Top scorer | Same spotlight section |
+| `NEXT_PUBLIC_IS_SHOW_AWARD` | Show or hide the **entire** champion + three individual awards block | Set to `true` (case-insensitive) to show; empty or any other value hides it |
+
+**Notes:**
+
+- If a URL variable is **empty**, the app uses the **fallback** in `lib/tournament.ts` (`DEFAULT_URLS`, typically `/placeholder.svg`).
+- Values may be absolute URLs (`https://...`) or static paths under `public` (e.g. `/placeholder-logo.png`).
+- After changing env vars, **restart** `pnpm dev`. On Vercel: add variables under **Settings → Environment Variables**, then **Redeploy**.
+
+Example (media-only; merge into your env file):
+
+```env
+NEXT_PUBLIC_TOURNAMENT_LOGO_URL=https://example.com/logo.jpg
+NEXT_PUBLIC_TOURNAMENT_BANNER_URL=https://example.com/banner.jpg
+NEXT_PUBLIC_HOME_CHAMPION_IMAGE_URL=https://example.com/champion.jpg
+NEXT_PUBLIC_HOME_AWARD_BEST_GOALKEEPER_IMAGE_URL=https://example.com/gk.jpg
+NEXT_PUBLIC_HOME_AWARD_BEST_PLAYER_IMAGE_URL=https://example.com/mvp.jpg
+NEXT_PUBLIC_HOME_AWARD_TOP_SCORER_IMAGE_URL=https://example.com/scorer.jpg
+NEXT_PUBLIC_IS_SHOW_AWARD=true
+```
 
 ### 4. Run the Development Server
 
@@ -129,43 +161,43 @@ All styling uses Tailwind CSS v4 with shadcn/ui components. Dark theme is built-
 
 Modify color tokens in `app/globals.css` under the `@theme` section.
 
-## Kiểm tra trước khi push
+## Pre-push checklist
 
-Trước khi đẩy code lên remote (hoặc mở PR), nên chạy lần lượt:
+Before pushing to the remote (or opening a PR), run these in order:
 
-1. **Lint** — không còn lỗi ESLint:
+1. **Lint** — no ESLint errors:
    ```bash
    pnpm lint
    ```
-   (hoặc `npm run lint` nếu dùng npm)
+   (or `npm run lint` if you use npm)
 
-2. **Build production** — đảm bảo Next.js biên dịch được như môi trường thật:
+2. **Production build** — confirm Next.js compiles like production:
    ```bash
    pnpm build
    ```
-   Xem mục [Build production](#build-production) bên dưới.
+   See [Production build](#production-build) below.
 
-3. **Biến môi trường** — không commit file `.env.local` / secrets; trên CI hoặc Vercel cấu hình tương đương (`NEXT_PUBLIC_SUPABASE_*`, `ADMIN_*`).
+3. **Environment variables** — do not commit `.env`, `.env.local`, or secrets; configure the same keys on CI or Vercel (`NEXT_PUBLIC_SUPABASE_*`, `ADMIN_*`, and optionally the media keys from **3b**).
 
-4. **Rà soát nhanh** — mở các trang chính (trang chủ, bảng xếp hạng, lịch, chi tiết trận) nếu vừa đổi UI hoặc API.
+4. **Smoke test** — open main pages (home, standings, fixtures, match detail) if you changed UI or APIs.
 
-## Build production
+## Production build
 
-Build tối ưu cho môi trường production (kiểm tra lỗi kiểu, bundle, v.v.):
+Optimized production build (type checks, bundle, etc.):
 
 ```bash
 pnpm install
 pnpm build
 ```
 
-- Kết quả thành công: thư mục `.next` được tạo, không có lỗi trong log.
-- Sau build, chạy server production cục bộ để kiểm tra:
+- On success: `.next` is created with no errors in the log.
+- After building, run the production server locally:
   ```bash
   pnpm start
   ```
-  Mặc định: `http://localhost:3000` (giống hành vi trên Vercel sau deploy).
+  Default: `http://localhost:3000` (similar to Vercel after deploy).
 
-**Lưu ý:** `pnpm dev` là chế độ phát triển; luôn xác nhận bằng `pnpm build` trước khi merge/push các thay đổi lớn.
+**Note:** `pnpm dev` is for development; run `pnpm build` before merging or pushing large changes.
 
 ## Deployment
 
@@ -173,7 +205,7 @@ pnpm build
 
 1. Push your code to GitHub
 2. Import your repo in [Vercel](https://vercel.com)
-3. Add environment variables in **Settings → Environment Variables**
+3. Add environment variables in **Settings → Environment Variables** (Supabase, admin, and optional `NEXT_PUBLIC_*` keys for logo/banner/spotlight — see **3b** above)
 4. Deploy!
 
 The app will be live at `https://your-project.vercel.app`
@@ -196,6 +228,13 @@ The app will be live at `https://your-project.vercel.app`
 - Go to **Functions** in Supabase to see if there are errors
 - Manually check the `standings` table to see if it was updated
 
+### Logo/banner or awards block wrong / not visible
+
+- The champion + individual awards block only shows when `NEXT_PUBLIC_IS_SHOW_AWARD=true`.
+- Image URLs must use the `NEXT_PUBLIC_` prefix and the **exact variable names** from the table in **3b**.
+- After editing env, restart the dev server or redeploy production.
+- If a variable is empty, the app uses placeholders from `lib/tournament.ts`.
+
 ## File Structure
 
 ```
@@ -214,6 +253,7 @@ The app will be live at `https://your-project.vercel.app`
 │   └── ui/                     # shadcn/ui components
 ├── lib/
 │   ├── supabase.ts             # Supabase client & types
+│   ├── tournament.ts           # Tournament name + image URLs from NEXT_PUBLIC_*
 │   └── auth.ts                 # Admin auth helpers
 ├── scripts/
 │   ├── 001-tournament-schema.sql

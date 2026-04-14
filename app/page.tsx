@@ -7,6 +7,11 @@ import { StandingsTable } from "@/components/standings-table";
 import { Match, Team, Standing } from "@/lib/supabase";
 import Image from "next/image";
 import {
+  HOME_AWARD_BEST_GOALKEEPER_IMAGE_URL,
+  HOME_AWARD_BEST_PLAYER_IMAGE_URL,
+  HOME_AWARD_TOP_SCORER_IMAGE_URL,
+  HOME_CHAMPION_IMAGE_URL,
+  IS_SHOW_AWARD,
   TOURNAMENT_BANNER_URL,
   TOURNAMENT_LOGO_URL,
   TOURNAMENT_NAME,
@@ -235,6 +240,74 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {IS_SHOW_AWARD && (
+            <>
+              {/* Nhà vô địch + giải cá nhân */}
+              <section
+                className="mb-8 overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+                aria-label="Nhà vô địch và danh hiệu cá nhân"
+              >
+                <div className="relative aspect-21/9 min-h-[180px] w-full sm:min-h-[220px]">
+                  <Image
+                    src={HOME_CHAMPION_IMAGE_URL}
+                    alt="Nhà vô địch"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 1280px) 100vw, 1280px"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/55 via-transparent to-black/20" />
+                  <p className="absolute bottom-3 left-4 right-4 text-center text-sm font-bold uppercase tracking-widest text-white drop-shadow-md sm:text-left sm:text-base">
+                    Nhà vô địch
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 sm:gap-4 sm:p-5">
+                  <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-muted/20">
+                    <div className="relative aspect-4/3 w-full min-h-[140px]">
+                      <Image
+                        src={HOME_AWARD_BEST_GOALKEEPER_IMAGE_URL}
+                        alt="Thủ môn xuất sắc nhất giải"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                      />
+                    </div>
+                    <p className="border-t border-border bg-card px-3 py-2.5 text-center text-xs font-semibold leading-snug text-foreground sm:text-sm">
+                      Thủ môn xuất sắc nhất giải
+                    </p>
+                  </div>
+                  <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-muted/20">
+                    <div className="relative aspect-4/3 w-full min-h-[140px]">
+                      <Image
+                        src={HOME_AWARD_BEST_PLAYER_IMAGE_URL}
+                        alt="Cầu thủ xuất sắc nhất giải"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                      />
+                    </div>
+                    <p className="border-t border-border bg-card px-3 py-2.5 text-center text-xs font-semibold leading-snug text-foreground sm:text-sm">
+                      Cầu thủ xuất sắc nhất giải
+                    </p>
+                  </div>
+                  <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border bg-muted/20">
+                    <div className="relative aspect-4/3 w-full min-h-[140px]">
+                      <Image
+                        src={HOME_AWARD_TOP_SCORER_IMAGE_URL}
+                        alt="Vua phá lưới"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 33vw"
+                      />
+                    </div>
+                    <p className="border-t border-border bg-card px-3 py-2.5 text-center text-xs font-semibold leading-snug text-foreground sm:text-sm">
+                      Vua phá lưới
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </>
+          )}
 
           {/* Statistics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
